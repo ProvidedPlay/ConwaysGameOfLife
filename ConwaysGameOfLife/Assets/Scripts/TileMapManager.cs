@@ -5,7 +5,8 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class TileMapManager : MonoBehaviour
 {
-    public CameraToGameBoardResizer boardResizer;
+    public CameraToGameBoardResizer cameraResizer;
+    public GameManager gameManager;
 
     [SerializeField]//shows this in inspector
     //Check out this link for a refresher on why/how I did this: https://sj-jason-liu.medium.com/properties-c-skill-in-unity-4-adedd3959dc0#:~:text=To%20set%20a%20property%2C%20first,user%20can%20change%20the%20value.
@@ -17,11 +18,6 @@ public class TileMapManager : MonoBehaviour
         }
         set {
             tileMapWidth = value;
-            print("width changed to " + tileMapWidth);
-            if (boardResizer != null)
-            {
-                boardResizer.UpdateCameraWidth(value);
-            }
         }
     }
     [SerializeField]
@@ -34,9 +30,18 @@ public class TileMapManager : MonoBehaviour
         }
         set { 
             tileMapHeight=value;
+            tileMapWidth = (int)Mathf.Round(tileMapHeight * tileMapWidthToHeightRatio);
+            if (cameraResizer != null)
+            {
+                cameraResizer.UpdateCamera(tileMapHeight, TileMapWidth);
+            }
+            UpdateTileMapBounds(tileMapWidth, tileMapHeight);
         }
     }
 
+    public float tileMapWidthToHeightRatio;
+
+    public BoundsInt tileMapBounds;
     void Awake()
     {
         UnpackObjectReferences();
@@ -51,6 +56,14 @@ public class TileMapManager : MonoBehaviour
 
     void UnpackObjectReferences()
     {
-        boardResizer = GetComponent<CameraToGameBoardResizer>();
+        cameraResizer = GetComponent<CameraToGameBoardResizer>();
+        gameManager = GetComponent<GameManager>();
+    }
+
+    void UpdateTileMapBounds(int width, int height)
+    {
+        Vector3Int minPosition = new(0, 0, 0);
+        Vector3Int maxPosition = new(width, height, 1);
+        tileMapBounds.SetMinMax(minPosition, maxPosition);
     }
 }

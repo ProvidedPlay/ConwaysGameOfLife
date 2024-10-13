@@ -21,11 +21,21 @@ public class CameraToGameBoardResizer : MonoBehaviour
             cam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         }
     }
-    public void UpdateCameraWidth(int width)
+    public void UpdateCamera(float height, float width)
+    {
+        UpdateCameraWidth(height);
+        UpdateCameraPosition(height, width);
+    }
+    void UpdateCameraWidth(float height)
     {
         if (cam != null)
         {
-            cam.orthographicSize = width;
+            cam.orthographicSize = height / 2;
         }
+    }
+
+    void UpdateCameraPosition(float height, float width)
+    {
+        cam.transform.position = new Vector3(width / 2, height / 2, cam.transform.position.z);
     }
 }
