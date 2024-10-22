@@ -210,8 +210,8 @@ MonoBehaviour:
   onColor: {r: 1, g: 1, b: 1, a: 1}
   offColor: {r: 0, g: 0, b: 0, a: 1}
   tilemapZAxisPosition: 0
-  minimumTickIntervalTime: 0.2
-  gameState: 0
+  minimumTickIntervalTime: 0.05
+  maxHorizontalCellsBeforeGridDefaultOff: 960
   portionOfLivingStartCells: -0.93
 --- !u!4 &379804042
 Transform:
@@ -242,12 +242,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cameraResizer: {fileID: 379804044}
   gameManager: {fileID: 379804041}
-  tileMapWidth: 192
-  tileMapHeight: 108
+  tileMapWidth: 96
+  tileMapHeight: 54
   tileMapWidthToHeightRatio: 1.777778
   tileMapBounds:
     m_Position: {x: 0, y: 0, z: 0}
-    m_Size: {x: 192, y: 108, z: 1}
+    m_Size: {x: 96, y: 54, z: 1}
 --- !u!114 &379804044
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -368,7 +368,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 54
+  orthographic size: 27
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -393,7 +393,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 96, y: 54, z: -10}
+  m_LocalPosition: {x: 48, y: 27, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -605,7 +605,7 @@ Tilemap:
     m_Data: {r: NaN, g: NaN, b: NaN, a: NaN}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
-  m_Color: {r: 1, g: 1, b: 1, a: 0.003921569}
+  m_Color: {r: 0.14901961, g: 0.14901961, b: 0.14901961, a: 0.3529412}
   m_Origin: {x: -30, y: -16, z: 0}
   m_Size: {x: 60, y: 32, z: 1}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}

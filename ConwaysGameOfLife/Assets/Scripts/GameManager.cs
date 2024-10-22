@@ -21,20 +21,13 @@ public class GameManager : MonoBehaviour
 
     public int tilemapZAxisPosition;
     public float minimumTickIntervalTime;
+    public int maxHorizontalCellsBeforeGridDefaultOff;
 
     public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
     public Dictionary<Vector3Int, bool> selectedTiles = new();
     public Dictionary<Vector3Int, bool> livingCells = new();
     public Dictionary<Vector3Int, bool> deadCellConsiderationDict = new();
     public Dictionary<Vector3Int, bool> cellsMarkedForLifeChange = new();
-
-    public enum GameState
-    {
-        GameSetup,
-        GamePlaying,
-        GameOver
-    }
-    public GameState gameState;
 
     [Range(-1, 1)]
     public float portionOfLivingStartCells;
@@ -61,10 +54,6 @@ public class GameManager : MonoBehaviour
                 RandomizeAllColors();
             }
         }
-        if(gameState.ToString() == "GamePlaying")
-        {
-            RunGame();
-        }
         */
 
         if (Input.GetButtonDown(proceedToNextGameStateShortcut))
@@ -84,12 +73,6 @@ public class GameManager : MonoBehaviour
     void SetUpGameBoard()
     {
         InstantiateTilesPositionArray();
-        /*
-        if (gameState.ToString() == "GameSetup")
-        {
-            InstantiateTilesPositionArray();
-        }
-        */
     }
 
     void InstantiateTilesPositionArray()
@@ -118,13 +101,11 @@ public class GameManager : MonoBehaviour
     {
         foreach(var tile in allTiles)
         {
-            //ColorTile(tile.Key, tileMap, Random.Range(-1f, 1f) > portionOfLivingStartCells ? offColor : onColor);
             KillOrBirthCell(tile.Key, Random.Range(-1f, 1f) < portionOfLivingStartCells);
         }
     }
     void KillOrBirthCell(Vector3Int tilePosition, bool isCellAlive)
     {
-        //allTiles[tilePosition] = isCellAlive;
         ColorTile(tilePosition, tileMap, isCellAlive ? onColor : offColor);
 
         if (isCellAlive )
@@ -158,18 +139,20 @@ public class GameManager : MonoBehaviour
         yield return StartCoroutine(GameSetup());
         yield return StartCoroutine(GamePlaying());
         yield return StartCoroutine(RoundEnding());
-        Debug.Log("It all ended");
         GameStart();
     }
 
     private IEnumerator GameSetup()
     {
         Debug.Log("Coroutine state: game setup");
-        ToggleOverlayGrid(true);
+        ToggleOverlayGrid(CheckIfToggleGridOnByDefault());
         while (!proceedToNextGameState)
         {
             //code in here will run during this game state
-
+            if (Input.GetKeyDown(KeyCode.LeftControl))
+            {
+                ToggleOverlayGridOnOff();
+            }
             CustomizeGameBoard();
             yield return null;
         }
@@ -392,6 +375,17 @@ public class GameManager : MonoBehaviour
     void ToggleOverlayGrid(bool toggleOn)
     {
         overlayGridTileMapRenderer.enabled = toggleOn;
+    }
+
+    bool CheckIfToggleGridOnByDefault ()
+    {
+        bool toggleGridOnByDefault = tileMapManager.TileMapWidth < maxHorizontalCellsBeforeGridDefaultOff ? true : false;
+        return toggleGridOnByDefault;
+    }
+
+    void ToggleOverlayGridOnOff()
+    {
+        ToggleOverlayGrid(!overlayGridTileMapRenderer.enabled);
     }
 }
 
