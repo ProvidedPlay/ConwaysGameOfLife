@@ -7,13 +7,20 @@ using UnityEngine.Tilemaps;
 public class GameManager : MonoBehaviour
 {
     public Tilemap tileMap;
+    public Tilemap overlayGridTileMap;
+    public TilemapRenderer overlayGridTileMapRenderer;
     public TileMapManager tileMapManager;
     public TileBase defaultTile;
+    public TileBase gridTile;
+
+    public bool proceedToNextGameState;
+    public string proceedToNextGameStateShortcut;
 
     public Color onColor = Color.white;
     public Color offColor = Color.black;
 
     public int tilemapZAxisPosition;
+    public float minimumTickIntervalTime;
 
     public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
     public Dictionary<Vector3Int, bool> selectedTiles = new();
@@ -59,10 +66,17 @@ public class GameManager : MonoBehaviour
             RunGame();
         }
         */
+
+        if (Input.GetButtonDown(proceedToNextGameStateShortcut))
+        {
+            proceedToNextGameState = true;
+        }
     }
     void UnpackReferences()
     {
         tileMap = GameObject.FindGameObjectWithTag("Game Board").GetComponent<Tilemap>();
+        overlayGridTileMap = GameObject.FindGameObjectWithTag("Overlay Grid").GetComponent<Tilemap>();
+        overlayGridTileMapRenderer = GameObject.FindGameObjectWithTag("Overlay Grid").GetComponent<TilemapRenderer>();
         tileMapManager = GetComponent<TileMapManager>();
 
     }
@@ -88,6 +102,7 @@ public class GameManager : MonoBehaviour
                 //Debug.Log(tilePosition.ToString());
                 allTiles.Add(tilePosition, false);
                 tileMap.SetTile(tilePosition, defaultTile);
+                overlayGridTileMap.SetTile(tilePosition, gridTile);
                 ColorTile(tilePosition, tileMap, offColor);
             }
             tilemapZAxisPosition = (int)tileMap.transform.position.z;
@@ -143,13 +158,15 @@ public class GameManager : MonoBehaviour
         yield return StartCoroutine(GameSetup());
         yield return StartCoroutine(GamePlaying());
         yield return StartCoroutine(RoundEnding());
+        Debug.Log("It all ended");
         GameStart();
     }
 
     private IEnumerator GameSetup()
     {
         Debug.Log("Coroutine state: game setup");
-        while (!Input.GetKeyDown(KeyCode.Return))
+        ToggleOverlayGrid(true);
+        while (!proceedToNextGameState)
         {
             //code in here will run during this game state
 
@@ -158,12 +175,14 @@ public class GameManager : MonoBehaviour
         }
         //ConsiderLivingCells();//this is a test, remove when actually implementing
         yield return new WaitForEndOfFrame();
+        proceedToNextGameState = false;
     }
     private IEnumerator GamePlaying()
     {
         Debug.Log("Coroutine state: game playing");
         ClearSelectedTiles();
-        while (!Input.GetKeyDown(KeyCode.Return))
+        ToggleOverlayGrid(false);
+        while (!proceedToNextGameState)
         {
             //code in here will run during this game state
             //RandomizeAllColors();
@@ -173,20 +192,25 @@ public class GameManager : MonoBehaviour
             }
             */
             RunCellLifeCycleLoop();
-            yield return null;
+
+            yield return new WaitForSeconds(minimumTickIntervalTime);
+            //yield return null;
         }
+        Debug.Log("exited game playing");
         yield return new WaitForEndOfFrame();
+        proceedToNextGameState = false;
     }
     private IEnumerator RoundEnding()
     {
         Debug.Log("Coroutine state: game ending");
-        while (!Input.GetKeyDown(KeyCode.Return))
+        while (!proceedToNextGameState)
         {
             //code in here will run during this game state
 
             yield return null;
         }
         yield return new WaitForEndOfFrame();
+        proceedToNextGameState = false;
     }
 
     /*
@@ -299,7 +323,7 @@ public class GameManager : MonoBehaviour
         {
             Dictionary<Vector3Int, bool> adjacentTiles = GetAdjacentTiles(livingCell.Key);
             int livingAdjacentCells = 0;
-            Debug.Log("now measuring " + livingCell);
+            //Debug.Log("now measuring " + livingCell);
             foreach (var cell in adjacentTiles)
             {
                 if (cell.Value == true)
@@ -309,13 +333,13 @@ public class GameManager : MonoBehaviour
                 else if (cell.Value == false && allTiles.ContainsKey(cell.Key))//this is the second time we lookup if the value exists (first is getvalueordefault) OPTIMIZETHIS
                 {
                     deadCellConsiderationDict[cell.Key] = true;
-                    Debug.Log("dead cell to consider: " + cell.Key);
+                    //Debug.Log("dead cell to consider: " + cell.Key);
                 }
             }
             if(livingAdjacentCells <2 || livingAdjacentCells > 3)
             {
                 MarkCellForLifeChange(livingCell.Key, false);
-                Debug.Log("Cell marked for death: " +  livingCell.Key + "living adjacent cells: " + livingAdjacentCells);
+                //Debug.Log("Cell marked for death: " +  livingCell.Key + "living adjacent cells: " + livingAdjacentCells);
             }
         }
     }
@@ -335,7 +359,7 @@ public class GameManager : MonoBehaviour
             if (livingAdjacentCells == 3)
             {
                 MarkCellForLifeChange(deadCell.Key, true);
-                Debug.Log("cell marked for birth: " +  deadCell.Key);
+                //Debug.Log("cell marked for birth: " +  deadCell.Key);
             }
         }
         deadCellConsiderationDict.Clear();
@@ -360,6 +384,14 @@ public class GameManager : MonoBehaviour
         ConsiderLivingCells();
         ConsiderDeadCells();
         UpdateCellLifeCycle();
+    }
+    /*
+     * Show/Hide overlay grid
+     */
+
+    void ToggleOverlayGrid(bool toggleOn)
+    {
+        overlayGridTileMapRenderer.enabled = toggleOn;
     }
 }
 

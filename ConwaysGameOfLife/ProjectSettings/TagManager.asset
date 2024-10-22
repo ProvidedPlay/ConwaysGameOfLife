@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Game Board
+  - Overlay Grid
   layers:
   - Default
   - TransparentFX
