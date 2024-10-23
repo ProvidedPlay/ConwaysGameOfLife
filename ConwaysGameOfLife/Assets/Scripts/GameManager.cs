@@ -67,44 +67,12 @@ public class GameManager : MonoBehaviour
         cameraController = GetComponent<CameraToGameBoardResizer>();
     }
 
-    [ContextMenu("forceSwitch")] void SetUpGameBoard()
-    {
-        InstantiateTilesPositionArray();
-        cameraController.ResetCamera();
 
-    }
-
-    void InstantiateTilesPositionArray()
-    {
-        if(tileMapManager != null && tileMap != null && defaultTile != null &&allTiles!=null)
-        {
-            ClearAllTiles();
-            foreach(var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
-            {
-                //Debug.Log(tilePosition.ToString());
-                allTiles.Add(tilePosition, false);
-                tileMap.SetTile(tilePosition, defaultTile);
-                overlayGridTileMap.SetTile(tilePosition, gridTile);
-                ColorTile(tilePosition, tileMap, offColor);
-            }
-            tilemapZAxisPosition = (int)tileMap.transform.position.z;
-        }
-    }
     /*
      * Utilities
      */
 
-    public void ClearAllTiles()
-    {
-        allTiles.Clear();
-        livingCells.Clear();
-        cellsMarkedForLifeChange.Clear();
-        deadCellConsiderationDict.Clear();
-        selectedTiles.Clear();
 
-        tileMap.ClearAllTiles();
-        overlayGridTileMap.ClearAllTiles();
-    }
     void ColorTile(Vector3Int tilePosition, Tilemap tileMap, Color desiredColor)
     {
             tileMap.SetTileFlags(tilePosition, TileFlags.None);
@@ -118,22 +86,48 @@ public class GameManager : MonoBehaviour
             KillOrBirthCell(tile.Key, Random.Range(-1f, 1f) < portionOfLivingStartCells);
         }
     }
-    void KillOrBirthCell(Vector3Int tilePosition, bool isCellAlive)
+    
+    bool checkIfMouseInteraction()
     {
-        ColorTile(tilePosition, tileMap, isCellAlive ? onColor : offColor);
-
-        if (isCellAlive )
+        return true;
+    }
+    /*
+     * Commands
+     */
+    void InstantiateTilesPositionArray()
+    {
+        if (tileMapManager != null && tileMap != null && defaultTile != null && allTiles != null)
         {
-            livingCells[tilePosition] = true;
-            allTiles[tilePosition] = true;
-        }
-        else if(!isCellAlive)
-        {
-            livingCells.Remove(tilePosition);
-            allTiles[tilePosition ] = false;
+            ClearAllTiles();
+            foreach (var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
+            {
+                //Debug.Log(tilePosition.ToString());
+                allTiles.Add(tilePosition, false);
+                tileMap.SetTile(tilePosition, defaultTile);
+                overlayGridTileMap.SetTile(tilePosition, gridTile);
+                ColorTile(tilePosition, tileMap, offColor);
+            }
+            tilemapZAxisPosition = (int)tileMap.transform.position.z;
         }
     }
+    public void ClearAllTiles()
+    {
+        allTiles.Clear();
+        livingCells.Clear();
+        cellsMarkedForLifeChange.Clear();
+        deadCellConsiderationDict.Clear();
+        selectedTiles.Clear();
 
+        tileMap.ClearAllTiles();
+        overlayGridTileMap.ClearAllTiles();
+    }
+    [ContextMenu("forceSwitch")]
+    void SetUpGameBoard()
+    {
+        InstantiateTilesPositionArray();
+        cameraController.ResetCamera();
+
+    }
     /*
      * 
      * COROUTINES
@@ -173,7 +167,6 @@ public class GameManager : MonoBehaviour
             CustomizeGameBoard();
             yield return null;
         }
-        //ConsiderLivingCells();//this is a test, remove when actually implementing
         yield return new WaitForEndOfFrame();
         proceedToNextGameState = false;
     }
@@ -185,15 +178,10 @@ public class GameManager : MonoBehaviour
         while (!proceedToNextGameState)
         {
             //code in here will run during this game state
-            /*
-            if (Input.GetKeyDown(KeyCode.LeftControl)){
-                RunCellLifeCycleLoop();
-            }
-            */
+
             RunCellLifeCycleLoop();
 
             yield return new WaitForSeconds(minimumTickIntervalTime);
-            //yield return null;
         }
         Debug.Log("exited game playing");
         yield return new WaitForEndOfFrame();
@@ -213,9 +201,7 @@ public class GameManager : MonoBehaviour
     }
 
     /*
-     * 
-     * Game State Methods
-     * 
+     * Tile Selector Methods
      */
     void CustomizeGameBoard()
     {
@@ -225,12 +211,11 @@ public class GameManager : MonoBehaviour
 
             FlipTileAtPosition(mousePosition);
         }
-        if(Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0))
         {
             ClearSelectedTiles();
         }
     }
-
     void FlipTileAtPosition(Vector3Int mousePosition)
     {
         //Debug.Log("attempting to flip at "+ mousePosition);
@@ -245,9 +230,6 @@ public class GameManager : MonoBehaviour
         }
 
     }
-    /*
-     * Tile Selector Methods
-     */
     Vector3Int GetTransformAtMousePosition()
     {
         Vector3Int mousePosition = Vector3Int.FloorToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
@@ -266,7 +248,21 @@ public class GameManager : MonoBehaviour
     /*
      * Cell Consideration
      */
+    void KillOrBirthCell(Vector3Int tilePosition, bool isCellAlive)
+    {
+        ColorTile(tilePosition, tileMap, isCellAlive ? onColor : offColor);
 
+        if (isCellAlive)
+        {
+            livingCells[tilePosition] = true;
+            allTiles[tilePosition] = true;
+        }
+        else if (!isCellAlive)
+        {
+            livingCells.Remove(tilePosition);
+            allTiles[tilePosition] = false;
+        }
+    }
     public Dictionary<Vector3Int, bool> GetAdjacentTiles(Vector3Int targetCell)
     {
         Dictionary<Vector3Int, bool> adjacentTiles= new Dictionary<Vector3Int, bool>()

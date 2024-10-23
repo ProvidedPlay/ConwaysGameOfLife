@@ -32,7 +32,6 @@ public class CameraToGameBoardResizer : MonoBehaviour
         {
             zoomFactor = Mathf.Clamp(value, 0, 10);
             float newCamHeight = Mathf.Lerp(minimumCameraHeight, cameraBounds.y, (float)zoomFactor/10);
-            Debug.Log(zoomFactor);
             UpdateCameraHeight(newCamHeight);
         }
     }
@@ -50,7 +49,6 @@ public class CameraToGameBoardResizer : MonoBehaviour
     {
         if(Input.GetAxisRaw("Mouse ScrollWheel") != 0)
         {
-            //Debug.Log("Scroll Captured");
             ZoomCamera(Input.GetAxis("Mouse ScrollWheel"), true);
         }
     }
