@@ -7,6 +7,7 @@ public class TileMapManager : MonoBehaviour
 {
     public CameraToGameBoardResizer cameraResizer;
     public GameManager gameManager;
+    public BoxCollider2D gameBorderBox;
 
     [SerializeField]//shows this in inspector
     //Check out this link for a refresher on why/how I did this: https://sj-jason-liu.medium.com/properties-c-skill-in-unity-4-adedd3959dc0#:~:text=To%20set%20a%20property%2C%20first,user%20can%20change%20the%20value.
@@ -33,9 +34,11 @@ public class TileMapManager : MonoBehaviour
             tileMapWidth = (int)Mathf.Round(tileMapHeight * tileMapWidthToHeightRatio);
             if (cameraResizer != null)
             {
-                cameraResizer.UpdateCamera(tileMapHeight, TileMapWidth);
+                cameraResizer.UpdateCameraBounds(tileMapWidth, TileMapHeight);
+                cameraResizer.ResetCamera();
             }
             UpdateTileMapBounds(tileMapWidth, tileMapHeight);
+            UpdateGameBorderBox();
         }
     }
 
@@ -58,6 +61,7 @@ public class TileMapManager : MonoBehaviour
     {
         cameraResizer = GetComponent<CameraToGameBoardResizer>();
         gameManager = GetComponent<GameManager>();
+        gameBorderBox = GameObject.FindGameObjectWithTag("Game Bounds").GetComponent<BoxCollider2D>();
     }
 
     void UpdateTileMapBounds(int width, int height)
@@ -65,5 +69,11 @@ public class TileMapManager : MonoBehaviour
         Vector3Int minPosition = new(0, 0, 0);
         Vector3Int maxPosition = new(width, height, 1);
         tileMapBounds.SetMinMax(minPosition, maxPosition);
+    }
+
+    void UpdateGameBorderBox()
+    {
+        gameBorderBox.offset = new ((float)tileMapBounds.xMax/2, (float)tileMapBounds.yMax/2);
+        gameBorderBox.size = new((float)tileMapBounds.xMax, (float)tileMapBounds.yMax);
     }
 }

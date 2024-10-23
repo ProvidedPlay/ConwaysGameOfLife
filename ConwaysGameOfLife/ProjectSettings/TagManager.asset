@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Game Board
   - Overlay Grid
+  - Virtual Camera
+  - Game Bounds
   layers:
   - Default
   - TransparentFX

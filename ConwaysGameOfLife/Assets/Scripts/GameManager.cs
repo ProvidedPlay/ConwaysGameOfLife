@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
     public TileMapManager tileMapManager;
     public TileBase defaultTile;
     public TileBase gridTile;
+    public CameraToGameBoardResizer cameraController;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
@@ -26,11 +27,14 @@ public class GameManager : MonoBehaviour
     public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
     public Dictionary<Vector3Int, bool> selectedTiles = new();
     public Dictionary<Vector3Int, bool> livingCells = new();
-    public Dictionary<Vector3Int, bool> deadCellConsiderationDict = new();
+    public Dictionary<Vector3Int, int> deadCellConsiderationDict = new();
     public Dictionary<Vector3Int, bool> cellsMarkedForLifeChange = new();
 
     [Range(-1, 1)]
     public float portionOfLivingStartCells;
+
+    private bool mouseButtonHeldDown;
+    private bool mouseButtonReleased;
 
     private void Awake()
     {
@@ -43,23 +47,16 @@ public class GameManager : MonoBehaviour
     }
     void Update()
     {
-        /*
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            InstantiateTilesPositionArray();
-        }
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            {
-                RandomizeAllColors();
-            }
-        }
-        */
-
         if (Input.GetButtonDown(proceedToNextGameStateShortcut))
         {
             proceedToNextGameState = true;
         }
+        if (Input.GetKeyDown(KeyCode.Escape))//restart from scratch
+        {
+            StopAllCoroutines();
+            GameStart();
+        }
+
     }
     void UnpackReferences()
     {
@@ -67,19 +64,21 @@ public class GameManager : MonoBehaviour
         overlayGridTileMap = GameObject.FindGameObjectWithTag("Overlay Grid").GetComponent<Tilemap>();
         overlayGridTileMapRenderer = GameObject.FindGameObjectWithTag("Overlay Grid").GetComponent<TilemapRenderer>();
         tileMapManager = GetComponent<TileMapManager>();
-
+        cameraController = GetComponent<CameraToGameBoardResizer>();
     }
 
-    void SetUpGameBoard()
+    [ContextMenu("forceSwitch")] void SetUpGameBoard()
     {
         InstantiateTilesPositionArray();
+        cameraController.ResetCamera();
+
     }
 
     void InstantiateTilesPositionArray()
     {
         if(tileMapManager != null && tileMap != null && defaultTile != null &&allTiles!=null)
         {
-            allTiles.Clear();
+            ClearAllTiles();
             foreach(var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
             {
                 //Debug.Log(tilePosition.ToString());
@@ -90,6 +89,21 @@ public class GameManager : MonoBehaviour
             }
             tilemapZAxisPosition = (int)tileMap.transform.position.z;
         }
+    }
+    /*
+     * Utilities
+     */
+
+    public void ClearAllTiles()
+    {
+        allTiles.Clear();
+        livingCells.Clear();
+        cellsMarkedForLifeChange.Clear();
+        deadCellConsiderationDict.Clear();
+        selectedTiles.Clear();
+
+        tileMap.ClearAllTiles();
+        overlayGridTileMap.ClearAllTiles();
     }
     void ColorTile(Vector3Int tilePosition, Tilemap tileMap, Color desiredColor)
     {
@@ -119,6 +133,7 @@ public class GameManager : MonoBehaviour
             allTiles[tilePosition ] = false;
         }
     }
+
     /*
      * 
      * COROUTINES
@@ -130,6 +145,7 @@ public class GameManager : MonoBehaviour
 
     private void GameStart()
     {
+        StopAllCoroutines();
         SetUpGameBoard();
         StartCoroutine(GameLoop());
     }
@@ -138,8 +154,9 @@ public class GameManager : MonoBehaviour
     {
         yield return StartCoroutine(GameSetup());
         yield return StartCoroutine(GamePlaying());
-        yield return StartCoroutine(RoundEnding());
-        GameStart();
+        //yield return StartCoroutine(RoundEnding());
+        //GameStart();
+        StartCoroutine(GameLoop());
     }
 
     private IEnumerator GameSetup()
@@ -168,7 +185,6 @@ public class GameManager : MonoBehaviour
         while (!proceedToNextGameState)
         {
             //code in here will run during this game state
-            //RandomizeAllColors();
             /*
             if (Input.GetKeyDown(KeyCode.LeftControl)){
                 RunCellLifeCycleLoop();
@@ -249,39 +265,6 @@ public class GameManager : MonoBehaviour
 
     /*
      * Cell Consideration
-     * create a dict of all living cells (livingCellConsiderationDict)
-     * for each cell in LivingCellConsiderationDict
-     *      for each neighboring cell (consider all cells around it)
-     *          if living: 
-     *              add to livingAdjacentCellCount
-     *          if dead: 
-     *              add to deadCellConsiderationDict
-     *      determineIfCurrentCellSurvives(livingAdjacentCellCount)
-     *          if livingAdjacentCellCount != 2,3
-     *              MarkCellForLifeChange(false) aka kill the cell
-     * clear livingCellConsiderationDict
-     * 
-     * for each cell in deadCellConsiderationDict
-     *      for each neighboring cell (consider all cells around it)
-     *          if living:
-     *              add to livingAdjacentCellCount
-     *      determineIfCurrentCellIsBorn(livingAdjacentCellCount)
-     *          if livingAdjacentCellCount = 3
-     *              MarkCellForLifeChange(true)aka birth the cell
-     *clear deadCellConsiderationDict
-     *              
-     *MarkCellForLifeChange(bool markedForLife, Vector3Int cellPosition)
-     *  cellsMarkedForLifeChange[cellPosition] = markedForLife
-     * 
-     *UpdateCellLifeCycle
-     *  forEach cellMarkedForLifeChange in cellsMarkedForLifeChange
-     *      allTiles[cellMarkedForLifeChange] = cellsMarkedForLifeChange[cellMarkedForLifeChange]
-     *      changeColor(cellMarkedForLifeChange, tilemap, cellsMarkedForLifeChange[cellMarkedForLifeChanged] == true? onColor : offColor
-     *cellsMarkedForLifeChange.Clear()
-     *      
-     *  
-     *              
-     *      
      */
 
     public Dictionary<Vector3Int, bool> GetAdjacentTiles(Vector3Int targetCell)
@@ -315,7 +298,8 @@ public class GameManager : MonoBehaviour
                 }
                 else if (cell.Value == false && allTiles.ContainsKey(cell.Key))//this is the second time we lookup if the value exists (first is getvalueordefault) OPTIMIZETHIS
                 {
-                    deadCellConsiderationDict[cell.Key] = true;
+                    deadCellConsiderationDict.TryGetValue(cell.Key, out int deadCellLivingAdjacentCells);
+                    deadCellConsiderationDict[cell.Key] = deadCellLivingAdjacentCells + 1;
                     //Debug.Log("dead cell to consider: " + cell.Key);
                 }
             }
@@ -330,16 +314,7 @@ public class GameManager : MonoBehaviour
     {
         foreach (var deadCell in deadCellConsiderationDict)
         {
-            Dictionary<Vector3Int, bool> adjacentTiles = GetAdjacentTiles(deadCell.Key);
-            int livingAdjacentCells = 0;
-            foreach (var cell in adjacentTiles)
-            {
-                if (cell.Value == true)
-                {
-                    livingAdjacentCells += 1;
-                }
-            }
-            if (livingAdjacentCells == 3)
+            if (deadCell.Value == 3)
             {
                 MarkCellForLifeChange(deadCell.Key, true);
                 //Debug.Log("cell marked for birth: " +  deadCell.Key);
