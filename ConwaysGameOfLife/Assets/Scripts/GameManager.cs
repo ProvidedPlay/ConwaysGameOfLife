@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 
 public class GameManager : MonoBehaviour
@@ -30,12 +31,6 @@ public class GameManager : MonoBehaviour
     public Dictionary<Vector3Int, int> deadCellConsiderationDict = new();
     public Dictionary<Vector3Int, bool> cellsMarkedForLifeChange = new();
 
-    [Range(-1, 1)]
-    public float portionOfLivingStartCells;
-
-    private bool mouseButtonHeldDown;
-    private bool mouseButtonReleased;
-
     private void Awake()
     {
         UnpackReferences();
@@ -49,7 +44,7 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetButtonDown(proceedToNextGameStateShortcut))
         {
-            proceedToNextGameState = true;
+            ProceedToNextGameState();//sets the bool proceedToNextGameState to 'true'
         }
         if (Input.GetKeyDown(KeyCode.Escape))//restart from scratch
         {
@@ -77,14 +72,6 @@ public class GameManager : MonoBehaviour
     {
             tileMap.SetTileFlags(tilePosition, TileFlags.None);
             tileMap.SetColor(tilePosition, desiredColor);
-    }
-
-    void RandomizeAllColors()
-    {
-        foreach(var tile in allTiles)
-        {
-            KillOrBirthCell(tile.Key, Random.Range(-1f, 1f) < portionOfLivingStartCells);
-        }
     }
     
     bool checkIfMouseInteraction()
@@ -127,6 +114,10 @@ public class GameManager : MonoBehaviour
         InstantiateTilesPositionArray();
         cameraController.ResetCamera();
 
+    }
+    public void ProceedToNextGameState()
+    {
+        proceedToNextGameState = true;
     }
     /*
      * 
@@ -219,7 +210,7 @@ public class GameManager : MonoBehaviour
     void FlipTileAtPosition(Vector3Int mousePosition)
     {
         //Debug.Log("attempting to flip at "+ mousePosition);
-        if (!selectedTiles.ContainsKey(mousePosition) && allTiles.ContainsKey(mousePosition))
+        if (!EventSystem.current.IsPointerOverGameObject() && !selectedTiles.ContainsKey(mousePosition) && allTiles.ContainsKey(mousePosition))
         {
             //Debug.Log(mousePosition + " flipped");
             //allTiles[mousePosition] = !allTiles[mousePosition]; OLD
