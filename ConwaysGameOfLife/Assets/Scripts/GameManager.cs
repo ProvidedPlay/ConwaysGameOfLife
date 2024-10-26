@@ -4,6 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,9 +15,11 @@ public class GameManager : MonoBehaviour
     public TileBase defaultTile;
     public TileBase gridTile;
     public CameraToGameBoardResizer cameraController;
+    public SettingsManager settingsManager;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
+    public string currentGameState;
 
     public Color onColor = Color.white;
     public Color offColor = Color.black;
@@ -48,7 +51,6 @@ public class GameManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Escape))//restart from scratch
         {
-            StopAllCoroutines();
             GameStart();
         }
 
@@ -60,6 +62,7 @@ public class GameManager : MonoBehaviour
         overlayGridTileMapRenderer = GameObject.FindGameObjectWithTag("Overlay Grid").GetComponent<TilemapRenderer>();
         tileMapManager = GetComponent<TileMapManager>();
         cameraController = GetComponent<CameraToGameBoardResizer>();
+        settingsManager = GameObject.FindGameObjectWithTag("UI").GetComponent<SettingsManager>();
     }
 
 
@@ -77,6 +80,10 @@ public class GameManager : MonoBehaviour
     bool checkIfMouseInteraction()
     {
         return true;
+    }
+    public void SetText(TextMeshProUGUI textComponent, string text) //turn this into a utility!
+    {
+        textComponent.SetText(text);
     }
     /*
      * Commands
@@ -119,6 +126,8 @@ public class GameManager : MonoBehaviour
     {
         proceedToNextGameState = true;
     }
+    
+
     /*
      * 
      * COROUTINES
@@ -128,7 +137,7 @@ public class GameManager : MonoBehaviour
      *                                                              //'yield <condition/code>': stops coroutine, waits for 'condition/code' to be met, resumes coroutine
      */
 
-    private void GameStart()
+    public void GameStart()
     {
         StopAllCoroutines();
         SetUpGameBoard();
@@ -147,6 +156,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator GameSetup()
     {
         Debug.Log("Coroutine state: game setup");
+        settingsManager.UpdateGameStateText("EDIT MODE");
         ToggleOverlayGrid(CheckIfToggleGridOnByDefault());
         while (!proceedToNextGameState)
         {
@@ -164,6 +174,7 @@ public class GameManager : MonoBehaviour
     private IEnumerator GamePlaying()
     {
         Debug.Log("Coroutine state: game playing");
+        settingsManager.UpdateGameStateText("PLAY MODE");
         ClearSelectedTiles();
         ToggleOverlayGrid(false);
         while (!proceedToNextGameState)
@@ -349,5 +360,6 @@ public class GameManager : MonoBehaviour
     {
         ToggleOverlayGrid(!overlayGridTileMapRenderer.enabled);
     }
+
 }
 

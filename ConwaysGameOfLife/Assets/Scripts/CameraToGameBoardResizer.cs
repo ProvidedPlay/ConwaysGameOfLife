@@ -11,6 +11,8 @@ public class CameraToGameBoardResizer : MonoBehaviour
     public Camera cam;
     public CinemachineVirtualCamera virtualCamera;
     public Tilemap tileMap;
+    public GameManager gameManager;
+    public SettingsManager settingsManager;
 
     public Vector2 cameraBounds;
 
@@ -19,6 +21,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
     public float minimumCameraHeight;
     public float currentCameraHeight;
 
+    public int maxZoomFactor;
     [Range(0, 10)]
     [SerializeField]
     private int zoomFactor;
@@ -30,7 +33,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
         }
         set
         {
-            zoomFactor = Mathf.Clamp(value, 0, 10);
+            zoomFactor = Mathf.Clamp(value, 0, maxZoomFactor);
             float newCamHeight = Mathf.Lerp(minimumCameraHeight, cameraBounds.y, (float)zoomFactor/10);
             UpdateCameraHeight(newCamHeight);
         }
@@ -63,6 +66,14 @@ public class CameraToGameBoardResizer : MonoBehaviour
         if(virtualCamera == null)
         {
             virtualCamera = GameObject.FindGameObjectWithTag("Virtual Camera").GetComponent<CinemachineVirtualCamera>();
+        }
+        if (gameManager == null)
+        {
+            gameManager = GetComponent<GameManager>();
+        }
+        if (settingsManager == null)
+        {
+            settingsManager = GameObject.FindGameObjectWithTag("UI").GetComponent<SettingsManager>();
         }
     }
     /*
@@ -111,12 +122,13 @@ public class CameraToGameBoardResizer : MonoBehaviour
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         UpdateCameraPosition(mousePosition.x, mousePosition.y);
     }
-    void ZoomCamera(float scrollValue, bool zoomInOnMouse)
+    public void ZoomCamera(float scrollValue, bool zoomInOnMouse)
     {
         AdjustZoomFactor(scrollValue);
         if (zoomInOnMouse)
         {
             ZoomInOnMouse();
         }
+        gameManager.SetText(settingsManager.zoomMultiplierText, (maxZoomFactor - gameManager.cameraController.ZoomFactor).ToString() + "X");
     }
 }

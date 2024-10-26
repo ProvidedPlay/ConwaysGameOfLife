@@ -8,6 +8,7 @@ TagManager:
   - Overlay Grid
   - Virtual Camera
   - Game Bounds
+  - UI
   layers:
   - Default
   - TransparentFX
