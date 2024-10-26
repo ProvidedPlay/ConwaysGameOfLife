@@ -12,7 +12,6 @@ public class CameraToGameBoardResizer : MonoBehaviour
     public CinemachineVirtualCamera virtualCamera;
     public Tilemap tileMap;
     public GameManager gameManager;
-    public SettingsManager settingsManager;
 
     public Vector2 cameraBounds;
 
@@ -71,10 +70,6 @@ public class CameraToGameBoardResizer : MonoBehaviour
         {
             gameManager = GetComponent<GameManager>();
         }
-        if (settingsManager == null)
-        {
-            settingsManager = GameObject.FindGameObjectWithTag("UI").GetComponent<SettingsManager>();
-        }
     }
     /*
      * Utilities
@@ -103,7 +98,10 @@ public class CameraToGameBoardResizer : MonoBehaviour
         int currentZoomFactor = ZoomFactor;
         ZoomFactor = currentZoomFactor + (1 * (int)Mathf.Sign(-scrollValue));
     }
-
+    void SetZoomFactor(int newZoomFactor)
+    {
+        ZoomFactor = newZoomFactor;
+    }
 
     /*
      * Commands
@@ -111,7 +109,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
     public void ResetCamera()
     {
         CenterCameraToBoard();
-        UpdateCameraHeight(cameraBounds.y);
+        ZoomCamera(maxZoomFactor);
     }
     void CenterCameraToBoard()
     {
@@ -129,6 +127,11 @@ public class CameraToGameBoardResizer : MonoBehaviour
         {
             ZoomInOnMouse();
         }
-        gameManager.SetText(settingsManager.zoomMultiplierText, (maxZoomFactor - gameManager.cameraController.ZoomFactor).ToString() + "X");
+        gameManager.settingsManager.UpdateZoomMultiplierText();
+    }
+    public void ZoomCamera(int newZoomFactor)
+    {
+        SetZoomFactor(newZoomFactor);
+        gameManager.settingsManager.UpdateZoomMultiplierText();
     }
 }

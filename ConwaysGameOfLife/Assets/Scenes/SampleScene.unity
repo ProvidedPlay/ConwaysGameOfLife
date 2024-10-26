@@ -728,7 +728,7 @@ MonoBehaviour:
   tileMapManager: {fileID: 379804043}
   defaultTile: {fileID: 11400000, guid: b899d21538564e8458634b5bf26e52b7, type: 2}
   gridTile: {fileID: 11400000, guid: 5836739fd5e4c484db3ee487c20f7b1c, type: 2}
-  cameraController: {fileID: 0}
+  cameraController: {fileID: 379804044}
   settingsManager: {fileID: 680852878}
   proceedToNextGameState: 0
   proceedToNextGameStateShortcut: Submit
@@ -790,7 +790,6 @@ MonoBehaviour:
   virtualCamera: {fileID: 1849533974}
   tileMap: {fileID: 883073596}
   gameManager: {fileID: 379804041}
-  settingsManager: {fileID: 680852878}
   cameraBounds: {x: 192, y: 108}
   cameraEdgeBuffer: 0.01
   minimumCameraHeight: 10
@@ -1520,7 +1519,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ce6ab4f65b322b448af9ca346d9163d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
+  gameManager: {fileID: 379804041}
   currentGameStateText: {fileID: 1685317714}
   playPauseButtonText: {fileID: 337501691}
   zoomMultiplierText: {fileID: 836775808}
@@ -2237,7 +2236,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 1x
+  m_text: 0X
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
   m_sharedMaterial: {fileID: 2140032, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
