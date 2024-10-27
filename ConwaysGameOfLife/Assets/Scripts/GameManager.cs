@@ -76,15 +76,6 @@ public class GameManager : MonoBehaviour
             tileMap.SetTileFlags(tilePosition, TileFlags.None);
             tileMap.SetColor(tilePosition, desiredColor);
     }
-    
-    bool checkIfMouseInteraction()
-    {
-        return true;
-    }
-    public void SetText(TextMeshProUGUI textComponent, string text) //turn this into a utility!
-    {
-        textComponent.SetText(text);
-    }
     /*
      * Commands
      */

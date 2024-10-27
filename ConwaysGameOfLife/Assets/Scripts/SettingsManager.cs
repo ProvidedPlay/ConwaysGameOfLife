@@ -31,15 +31,15 @@ public class SettingsManager : MonoBehaviour
     public void UpdateGameStateText(string gameState)
     {
         gameManager.currentGameState = gameState;
-        gameManager.SetText(currentGameStateText, gameManager.currentGameState);
+        SetUIText.SetText(currentGameStateText, gameManager.currentGameState);
 
         string newPlayPauseButtonText;
         newPlayPauseButtonText = gameState == "EDIT MODE" ? "PLAY" : "PAUSE";
-        gameManager.SetText(playPauseButtonText, newPlayPauseButtonText); //improve this!!! remove hardcoded values!
+        SetUIText.SetText(playPauseButtonText, newPlayPauseButtonText); //improve this!!! remove hardcoded values!
     }
     public void UpdateZoomMultiplierText()
     {
-        gameManager.SetText(zoomMultiplierText, (gameManager.cameraController.maxZoomFactor - gameManager.cameraController.ZoomFactor).ToString() + "X");
+        SetUIText.SetText(zoomMultiplierText, (gameManager.cameraController.maxZoomFactor - gameManager.cameraController.ZoomFactor).ToString() + "X");
     }
 
     /*
