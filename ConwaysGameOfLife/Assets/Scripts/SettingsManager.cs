@@ -13,6 +13,7 @@ public class SettingsManager : MonoBehaviour
     public TextMeshProUGUI currentGameStateText;
     public TextMeshProUGUI playPauseButtonText;
     public TextMeshProUGUI zoomMultiplierText;
+    public TextMeshProUGUI gameSpeedFactorText;
 
 
     private void Awake()
@@ -26,7 +27,7 @@ public class SettingsManager : MonoBehaviour
     }
 
     /*
-     * Utilities
+     * UI Utilities
      */
     public void UpdateGameStateText(string gameState)
     {
@@ -40,6 +41,11 @@ public class SettingsManager : MonoBehaviour
     public void UpdateZoomMultiplierText()
     {
         SetUIText.SetText(zoomMultiplierText, (gameManager.cameraController.maxZoomFactor - gameManager.cameraController.ZoomFactor).ToString() + "X");
+    }
+
+    public void UpdateSpeedFactorText()
+    {
+        SetUIText.SetText(gameSpeedFactorText, gameManager.GameSpeedFactor.ToString()+ "X");
     }
 
     /*
@@ -68,7 +74,12 @@ public class SettingsManager : MonoBehaviour
         {
             gameManager.cameraController.ZoomCamera(increaseZoom ? 1 : -1, false);
         }
-
-
+    }
+    public void PressChangeGameSpeedFactorButton(bool increaseSpeedFactor)
+    {
+        if (gameManager != null)
+        {
+            gameManager.IncrementGameSpeedFactor(increaseSpeedFactor ? 1 : -1);
+        }
     }
 }

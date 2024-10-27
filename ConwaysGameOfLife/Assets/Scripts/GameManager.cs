@@ -25,9 +25,24 @@ public class GameManager : MonoBehaviour
     public Color offColor = Color.black;
 
     public int tilemapZAxisPosition;
-    public float minimumTickIntervalTime;
     public int maxHorizontalCellsBeforeGridDefaultOff;
 
+    public int maxGameSpeedFactor;
+    public float minimumTickIntervalTime;
+    public float maximumTickIntervalTime;
+    public float tickIntervalTime;
+    [Range(1,10)]
+    [SerializeField]
+    private int gameSpeedFactor;
+    public int GameSpeedFactor
+    {
+        get { return gameSpeedFactor; }
+        set 
+        { 
+            gameSpeedFactor = Mathf.Clamp(value, 1, maxGameSpeedFactor);
+            UpdateGameSpeedToSpeedFactor();
+        }
+    }
     public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
     public Dictionary<Vector3Int, bool> selectedTiles = new();
     public Dictionary<Vector3Int, bool> livingCells = new();
@@ -54,6 +69,10 @@ public class GameManager : MonoBehaviour
             GameStart();
         }
 
+    }
+    private void OnValidate()
+    {
+        GameSpeedFactor = gameSpeedFactor;
     }
     void UnpackReferences()
     {
@@ -174,7 +193,7 @@ public class GameManager : MonoBehaviour
 
             RunCellLifeCycleLoop();
 
-            yield return new WaitForSeconds(minimumTickIntervalTime);
+            yield return new WaitForSeconds(tickIntervalTime);
         }
         Debug.Log("exited game playing");
         yield return new WaitForEndOfFrame();
@@ -351,6 +370,25 @@ public class GameManager : MonoBehaviour
     {
         ToggleOverlayGrid(!overlayGridTileMapRenderer.enabled);
     }
-
+    /*
+     * Manage Game Speed
+     */
+    public void UpdateGameSpeedToSpeedFactor()
+    {
+        tickIntervalTime = 1f /Mathf.Pow(2,GameSpeedFactor);
+    }
+    public void IncrementGameSpeedFactor(int gameSpeedFactorChange)
+    {
+        int newGameSpeedFactor = gameSpeedFactor +(1 * (int)Mathf.Sign(gameSpeedFactorChange));
+        SetGameSpeedFactor(newGameSpeedFactor);
+    }
+    public void SetGameSpeedFactor(int newGameSpeedFactor)
+    {
+        GameSpeedFactor = newGameSpeedFactor;
+        if (settingsManager != null)
+        {
+            settingsManager.UpdateSpeedFactorText();
+        }
+    }
 }
 
