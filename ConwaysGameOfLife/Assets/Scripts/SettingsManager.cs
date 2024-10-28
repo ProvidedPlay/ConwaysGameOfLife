@@ -10,10 +10,14 @@ public class SettingsManager : MonoBehaviour
 {
 
     public GameManager gameManager;
+
     public TextMeshProUGUI currentGameStateText;
     public TextMeshProUGUI playPauseButtonText;
     public TextMeshProUGUI zoomMultiplierText;
     public TextMeshProUGUI gameSpeedFactorText;
+
+    public SlideToHideMenu sideMenu;
+    public SlideToHideMenu showMenuButton;
 
 
     private void Awake()
@@ -80,6 +84,17 @@ public class SettingsManager : MonoBehaviour
         if (gameManager != null)
         {
             gameManager.IncrementGameSpeedFactor(increaseSpeedFactor ? 1 : -1);
+        }
+    }
+    public void PressShowHideSideMenu(bool hideSideMenu)
+    {
+        if (hideSideMenu)
+        {
+            sideMenu.SlideToHide(true, showMenuButton);
+        }
+        else
+        {
+            showMenuButton.SlideToHide(true, sideMenu);
         }
     }
 }

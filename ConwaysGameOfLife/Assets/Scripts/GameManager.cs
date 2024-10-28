@@ -390,5 +390,13 @@ public class GameManager : MonoBehaviour
             settingsManager.UpdateSpeedFactorText();
         }
     }
+    /*
+     * Scene Manager
+     */
+    public void QuitGame()
+    {
+        StopAllCoroutines();
+        Application.Quit();
+    }
 }
 
