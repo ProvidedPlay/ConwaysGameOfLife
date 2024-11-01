@@ -16,7 +16,6 @@ public class SlideToHideMenu : MonoBehaviour
     public void SlideToHide(bool hideObject)
     {
         //rectTransform.anchoredPosition = hideObject ? hiddenPosition : shownPosition;
-        Debug.Log(identifier + " local position is " + rectTransform.localPosition);
         Vector2 newPosition = hideObject ? new Vector2 (rectTransform.localPosition.x + hiddenPosition.x, rectTransform.localPosition.y + hiddenPosition.y) : new Vector2 (rectTransform.localPosition.x + shownPosition.x, rectTransform.localPosition.y + shownPosition.y);
         rectTransform.DOLocalMove(newPosition, defaultSlideDuration);
     }
