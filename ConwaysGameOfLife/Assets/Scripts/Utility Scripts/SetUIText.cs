@@ -9,4 +9,9 @@ public static class SetUIText
     {
         textComponent.SetText(text);
     }
+
+    public static void SetInputFieldText(TMP_InputField textField, string text)
+    {
+        textField.text = text;
+    }
 }

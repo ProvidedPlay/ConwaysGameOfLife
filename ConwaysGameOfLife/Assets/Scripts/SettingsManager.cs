@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -15,6 +16,9 @@ public class SettingsManager : MonoBehaviour
     public TextMeshProUGUI playPauseButtonText;
     public TextMeshProUGUI zoomMultiplierText;
     public TextMeshProUGUI gameSpeedFactorText;
+
+    public TMP_InputField gridSizeXAxisText;
+    public TMP_InputField gridSizeYAxisInputField;
 
     public SlideToHideMenu sideMenu;
     public SlideToHideMenu showMenuButton;
@@ -102,8 +106,12 @@ public class SettingsManager : MonoBehaviour
     /*
      * Button Logic (Generate Map Menu)
      */
-    public void ChangeGridXAxisValue(int xAxisValue)
+    public void OnUpdateSettingsMenuYAxisValue()
     {
+        int yAxisValueInt = int.Parse(gridSizeYAxisInputField.text);
+        string xAxisText = TileMapGenerationHelper.GetTileMapWidth(yAxisValueInt, gameManager.tileMapManager.tileMapWidthToHeightRatio).ToString();
+        Debug.Log(xAxisText);
 
+        SetUIText.SetInputFieldText(gridSizeXAxisText, xAxisText);
     }
 }
