@@ -53,7 +53,7 @@ public class SettingsManager : MonoBehaviour
     }
 
     /*
-     * Button Logic 
+     * Button Logic (Side Menu)
      */
 
     public void PressPlayPause()
@@ -97,5 +97,13 @@ public class SettingsManager : MonoBehaviour
         {
             showMenuButton.SlideToHide(true, sideMenu);
         }
+    }
+
+    /*
+     * Button Logic (Generate Map Menu)
+     */
+    public void ChangeGridXAxisValue(int xAxisValue)
+    {
+
     }
 }

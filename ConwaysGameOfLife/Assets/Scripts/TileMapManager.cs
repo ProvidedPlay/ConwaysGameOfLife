@@ -31,7 +31,7 @@ public class TileMapManager : MonoBehaviour
         }
         set { 
             tileMapHeight=value;
-            TileMapGenerationHelper.GetTileMapWidth(tileMapHeight, tileMapWidthToHeightRatio);
+            tileMapWidth = (int)Mathf.Round(tileMapHeight * tileMapWidthToHeightRatio);
             if (cameraResizer != null)
             {
                 cameraResizer.UpdateCameraBounds(tileMapWidth, TileMapHeight);
