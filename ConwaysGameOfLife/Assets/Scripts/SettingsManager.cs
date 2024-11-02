@@ -88,6 +88,7 @@ public class SettingsManager : MonoBehaviour
     }
     public void PressShowHideSideMenu(bool hideSideMenu)
     {
+        Debug.Log("code run");
         if (hideSideMenu)
         {
             sideMenu.SlideToHide(true, showMenuButton);

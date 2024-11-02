@@ -11,11 +11,13 @@ public class GameManager : MonoBehaviour
     public Tilemap tileMap;
     public Tilemap overlayGridTileMap;
     public TilemapRenderer overlayGridTileMapRenderer;
-    public TileMapManager tileMapManager;
     public TileBase defaultTile;
     public TileBase gridTile;
+
+    public TileMapManager tileMapManager;
     public CameraToGameBoardResizer cameraController;
     public SettingsManager settingsManager;
+    public SaveLoadManager saveLoadManager;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
@@ -82,6 +84,7 @@ public class GameManager : MonoBehaviour
         tileMapManager = GetComponent<TileMapManager>();
         cameraController = GetComponent<CameraToGameBoardResizer>();
         settingsManager = GameObject.FindGameObjectWithTag("UI").GetComponent<SettingsManager>();
+        saveLoadManager = GetComponent<SaveLoadManager>();
     }
 
 
