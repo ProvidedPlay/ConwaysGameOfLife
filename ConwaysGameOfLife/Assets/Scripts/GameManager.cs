@@ -151,6 +151,9 @@ public class GameManager : MonoBehaviour
     {
         StopAllCoroutines();
         TileMapGenerationHelper.UpdateTileMapHeight(tileMapManager, levelData.tileMapHeight);
+        SetUpGameBoard();
+        livingCells = TileMapGenerationHelper.GenerateCellDictionaryFromPositionList(levelData.livingCells, true); // update living cells with data from save file
+        StartCoroutine(GameLoop());
 
     }
 

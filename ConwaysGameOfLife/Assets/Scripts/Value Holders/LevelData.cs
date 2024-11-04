@@ -20,5 +20,6 @@ public class LevelData
     public LevelData(int generatedTileMapHeight)
     {
         tileMapHeight = generatedTileMapHeight;
+        livingCells = new List<Vector3Int>();
     }
 }

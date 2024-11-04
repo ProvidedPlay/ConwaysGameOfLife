@@ -106,4 +106,12 @@ public class SettingsManager : MonoBehaviour
 
         SetUIText.SetInputFieldText(gridSizeXAxisText, xAxisText);
     }
+
+    public void OnClickGenerateButton(TMP_InputField gridSizeYAxisInputField)
+    {
+        int newLevelHeight = int.Parse(gridSizeYAxisInputField.text);
+        LevelData newLevelData = TileMapGenerationHelper.GenerateBlankLevel(newLevelHeight);
+
+        gameManager.GameLoad(newLevelData);
+    }
 }
