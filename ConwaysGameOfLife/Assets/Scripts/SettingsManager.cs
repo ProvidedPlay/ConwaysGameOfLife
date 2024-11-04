@@ -68,14 +68,6 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
-    public void PressGenerateNewMap()
-    {
-        if (gameManager != null)
-        {
-            gameManager.GameStart();
-        }
-    }
-
     public void PressChangeZoomButton(bool increaseZoom)
     {
         if(gameManager != null)

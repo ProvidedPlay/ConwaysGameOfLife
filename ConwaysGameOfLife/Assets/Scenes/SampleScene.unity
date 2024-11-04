@@ -1444,7 +1444,6 @@ GameObject:
   - component: {fileID: 379804041}
   - component: {fileID: 379804044}
   - component: {fileID: 379804043}
-  - component: {fileID: 379804045}
   m_Layer: 0
   m_Name: Game Manager
   m_TagString: GameController
@@ -1472,7 +1471,6 @@ MonoBehaviour:
   tileMapManager: {fileID: 379804043}
   cameraController: {fileID: 379804044}
   settingsManager: {fileID: 1791271381}
-  saveLoadManager: {fileID: 379804045}
   proceedToNextGameState: 0
   proceedToNextGameStateShortcut: Submit
   currentGameState: 
@@ -1543,18 +1541,6 @@ MonoBehaviour:
   currentCameraHeight: 53.99
   maxZoomFactor: 10
   zoomFactor: 10
---- !u!114 &379804045
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 379804040}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd93057d997b0f84c9ef583005ad2d65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &435660109
 GameObject:
   m_ObjectHideFlags: 0
@@ -4322,7 +4308,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1039505974
 RectTransform:
   m_ObjectHideFlags: 0

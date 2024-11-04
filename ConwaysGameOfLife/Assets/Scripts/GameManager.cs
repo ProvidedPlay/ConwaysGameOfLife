@@ -17,7 +17,6 @@ public class GameManager : MonoBehaviour
     public TileMapManager tileMapManager;
     public CameraToGameBoardResizer cameraController;
     public SettingsManager settingsManager;
-    public SaveLoadManager saveLoadManager;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
@@ -84,7 +83,6 @@ public class GameManager : MonoBehaviour
         tileMapManager = GetComponent<TileMapManager>();
         cameraController = GetComponent<CameraToGameBoardResizer>();
         settingsManager = GameObject.FindGameObjectWithTag("UI").GetComponent<SettingsManager>();
-        saveLoadManager = GetComponent<SaveLoadManager>();
     }
 
 
@@ -139,7 +137,22 @@ public class GameManager : MonoBehaviour
     {
         proceedToNextGameState = true;
     }
-    
+
+    /*
+     * Game Start/Load/Save
+     */
+    public void GameStart()
+    {
+        StopAllCoroutines();
+        SetUpGameBoard();
+        StartCoroutine(GameLoop());
+    }
+    public void GameLoad(LevelData levelData)
+    {
+        StopAllCoroutines();
+        TileMapGenerationHelper.UpdateTileMapHeight(tileMapManager, levelData.tileMapHeight);
+
+    }
 
     /*
      * 
@@ -149,14 +162,6 @@ public class GameManager : MonoBehaviour
      *              
      *                                                              //'yield <condition/code>': stops coroutine, waits for 'condition/code' to be met, resumes coroutine
      */
-
-    public void GameStart()
-    {
-        StopAllCoroutines();
-        SetUpGameBoard();
-        StartCoroutine(GameLoop());
-    }
-
     private IEnumerator GameLoop()
     {
         yield return StartCoroutine(GameSetup());
