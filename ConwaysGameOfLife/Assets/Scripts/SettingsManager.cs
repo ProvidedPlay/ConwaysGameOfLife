@@ -114,4 +114,15 @@ public class SettingsManager : MonoBehaviour
 
         gameManager.GameLoad(newLevelData);
     }
+
+    public void OnClickSaveGame(string saveGameName)
+    {
+        SaveLoadManager.SaveLevelWithName(gameManager, saveGameName);
+    }
+
+    public void OnClickLoadGame(string loadGameName)
+    {
+        LevelData newLevelData = SaveLoadManager.LoadLevel(loadGameName);
+        gameManager.GameLoad(newLevelData);
+    }
 }

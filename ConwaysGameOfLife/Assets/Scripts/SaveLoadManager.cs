@@ -20,6 +20,7 @@ public static class SaveLoadManager
 
         //create save file at specified path with specified save file name
         File.WriteAllText(saveFolderDirectoryPath + saveFileName, levelDataJSON);
+        Debug.Log(saveFolderDirectoryPath + saveFileName);
     }
     public static LevelData LoadLevel(string saveFileName)
     {

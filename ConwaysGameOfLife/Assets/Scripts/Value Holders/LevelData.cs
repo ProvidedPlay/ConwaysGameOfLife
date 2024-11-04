@@ -14,7 +14,7 @@ public class LevelData
     {
         //data required to load a save state with living cells
         livingCells = gameManager.livingCells.Keys.ToList();
-        tileMapHeight = gameManager.tileMapManager.TileMapWidth;
+        tileMapHeight = gameManager.tileMapManager.TileMapHeight;
     }
 
     public LevelData(int generatedTileMapHeight)

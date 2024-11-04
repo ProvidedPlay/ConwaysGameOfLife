@@ -137,6 +137,13 @@ public class GameManager : MonoBehaviour
     {
         proceedToNextGameState = true;
     }
+    public void ImportLivingCells(List<Vector3Int> livingCellLocations)
+    {
+        foreach(Vector3Int livingCellLocation in livingCellLocations)
+        {
+            KillOrBirthCell(livingCellLocation, true);
+        }
+    }
 
     /*
      * Game Start/Load/Save
@@ -152,7 +159,7 @@ public class GameManager : MonoBehaviour
         StopAllCoroutines();
         TileMapGenerationHelper.UpdateTileMapHeight(tileMapManager, levelData.tileMapHeight);
         SetUpGameBoard();
-        livingCells = TileMapGenerationHelper.GenerateCellDictionaryFromPositionList(levelData.livingCells, true); // update living cells with data from save file
+        ImportLivingCells(levelData.livingCells);
         StartCoroutine(GameLoop());
 
     }
