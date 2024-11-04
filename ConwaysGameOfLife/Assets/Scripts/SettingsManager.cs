@@ -94,6 +94,10 @@ public class SettingsManager : MonoBehaviour
             showMenuButton.SlideToHide(true, sideMenu);
         }
     }
+    public void OnClickQuitGame()
+    {
+        gameManager.QuitGame();
+    }
 
     /*
      * Button Logic (Generate Map Menu)
