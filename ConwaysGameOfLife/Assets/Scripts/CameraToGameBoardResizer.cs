@@ -37,6 +37,8 @@ public class CameraToGameBoardResizer : MonoBehaviour
             UpdateCameraHeight(newCamHeight);
         }
     }
+    public int cameraPanMouseButton;
+    private Vector3 mouseDragOriginPosition;
 
     private void OnValidate()
     {
@@ -53,6 +55,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
         {
             ZoomCamera(Input.GetAxis("Mouse ScrollWheel"), true);
         }
+        PanCamera();
     }
     void UnpackObjectReferences()
     {
@@ -117,7 +120,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
     }
     void ZoomInOnMouse()
     {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 mousePosition = cam.ScreenToWorldPoint(Input.mousePosition);
         UpdateCameraPosition(mousePosition.x, mousePosition.y);
     }
     public void ZoomCamera(float scrollValue, bool zoomInOnMouse)
@@ -133,5 +136,28 @@ public class CameraToGameBoardResizer : MonoBehaviour
     {
         SetZoomFactor(newZoomFactor);
         gameManager.settingsManager.UpdateZoomMultiplierText();
+    }
+    /*
+     * Pan Camera
+     */
+    public void PanCamera()
+    {
+        if(virtualCamera != null && cam != null)
+        {
+            if (Input.GetMouseButtonDown(cameraPanMouseButton))
+            {
+                //get the mouse position when the drag starts (initialClick)
+                mouseDragOriginPosition = cam.ScreenToWorldPoint(Input.mousePosition);
+            }
+            if (Input.GetMouseButton(cameraPanMouseButton))
+            {
+                //get distance mouse has moved since the button was first clicked
+                Vector3 mousePositionDifferenceSinceLastFrame = mouseDragOriginPosition - cam.ScreenToWorldPoint(Input.mousePosition);
+
+                //move the camera by that distance (using the update camera method)
+                Vector3 newPosition = cam.transform.position + mousePositionDifferenceSinceLastFrame;
+                UpdateCameraPosition(newPosition.x, newPosition.y);
+            }
+        }
     }
 }

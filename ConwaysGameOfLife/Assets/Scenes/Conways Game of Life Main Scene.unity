@@ -1565,6 +1565,7 @@ MonoBehaviour:
   currentCameraHeight: 26.96
   maxZoomFactor: 10
   zoomFactor: 10
+  cameraPanMouseButton: 2
 --- !u!1 &435660109
 GameObject:
   m_ObjectHideFlags: 0
