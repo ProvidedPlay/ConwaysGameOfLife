@@ -1,4 +1,5 @@
 using Cinemachine;
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml.Schema;
@@ -16,9 +17,12 @@ public class CameraToGameBoardResizer : MonoBehaviour
     public Vector2 cameraBounds;
 
     public float cameraEdgeBuffer;
+    public float cameraEdgeBufferPercentOfHeight;
+    public double cameraAspectRatio;
 
-    public float minimumCameraHeight;
-    public float currentCameraHeight;
+    public float minimumCameraOrthographicHeight;
+    public float currentCameraOrthographicHeight;
+    public float currentCameraOrthographicWidth;
 
     public int maxZoomFactor;
     [Range(0, 10)]
@@ -33,7 +37,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
         set
         {
             zoomFactor = Mathf.Clamp(value, 0, maxZoomFactor);
-            float newCamHeight = Mathf.Lerp(minimumCameraHeight, cameraBounds.y, (float)zoomFactor/10);
+            float newCamHeight = Mathf.Lerp(minimumCameraOrthographicHeight, cameraBounds.y, (float)zoomFactor/10);
             UpdateCameraHeight(newCamHeight);
         }
     }
@@ -81,20 +85,34 @@ public class CameraToGameBoardResizer : MonoBehaviour
     {
         if (virtualCamera != null)
         {
-            currentCameraHeight = (height / 2) - cameraEdgeBuffer;
-            virtualCamera.m_Lens.OrthographicSize = currentCameraHeight;
-            
+            //corrects for an error caused by camera aspect ratio initializing to 1
+            if(virtualCamera.m_Lens.Aspect != 1)
+            {
+                currentCameraOrthographicWidth = (height * virtualCamera.m_Lens.Aspect / 2) - cameraEdgeBuffer;
+            }
+            else
+            {
+                currentCameraOrthographicWidth = (height * (float)cameraAspectRatio/ 2) - cameraEdgeBuffer;
+            }
+
+            currentCameraOrthographicHeight = (height / 2) - cameraEdgeBuffer;
+            virtualCamera.m_Lens.OrthographicSize = currentCameraOrthographicHeight;            
         }
     }
     void UpdateCameraPosition(float xAxisCenter, float yAxisCenter)
     {
-        virtualCamera.transform.position = new Vector3(xAxisCenter, yAxisCenter, cam.transform.position.z);
+        //clamps the new camera positions value into the camera bounds
+        Vector3 newCameraPosition = new(Mathf.Clamp(xAxisCenter, currentCameraOrthographicWidth, cameraBounds.x - currentCameraOrthographicWidth), Mathf.Clamp(yAxisCenter, currentCameraOrthographicHeight, cameraBounds.y - currentCameraOrthographicHeight), cam.transform.position.z);
+        
+        //virtualCamera.transform.position = new Vector3(xAxisCenter, yAxisCenter, cam.transform.position.z);
+        virtualCamera.transform.position = newCameraPosition;
     }
 
     public void UpdateCameraBounds(float maxX, float maxY)
     {
         cameraBounds.x = maxX;
         cameraBounds.y = maxY;
+        cameraEdgeBuffer = maxY * cameraEdgeBufferPercentOfHeight;
     }
     void AdjustZoomFactor(float scrollValue)
     {
@@ -152,10 +170,10 @@ public class CameraToGameBoardResizer : MonoBehaviour
             if (Input.GetMouseButton(cameraPanMouseButton))
             {
                 //get distance mouse has moved since the button was first clicked
-                Vector3 mousePositionDifferenceSinceLastFrame = mouseDragOriginPosition - cam.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mousePositionDifferenceFromOrigin = mouseDragOriginPosition - cam.ScreenToWorldPoint(Input.mousePosition);
 
                 //move the camera by that distance (using the update camera method)
-                Vector3 newPosition = cam.transform.position + mousePositionDifferenceSinceLastFrame;
+                Vector3 newPosition = cam.transform.position + mousePositionDifferenceFromOrigin;
                 UpdateCameraPosition(newPosition.x, newPosition.y);
             }
         }

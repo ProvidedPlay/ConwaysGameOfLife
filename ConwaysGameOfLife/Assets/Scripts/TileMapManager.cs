@@ -32,12 +32,13 @@ public class TileMapManager : MonoBehaviour
         set { 
             tileMapHeight=value;
             tileMapWidth = (int)Mathf.Round(tileMapHeight * tileMapWidthToHeightRatio);
+            UpdateTileMapBounds(tileMapWidth, tileMapHeight);
+            UpdateGameBorderBox();
             if (cameraResizer != null)
             {
                 cameraResizer.UpdateCameraBounds(tileMapWidth, TileMapHeight);
                 cameraResizer.ResetCamera();
             }
-            UpdateTileMapBounds(tileMapWidth, tileMapHeight);
             UpdateGameBorderBox();
         }
     }
@@ -45,6 +46,7 @@ public class TileMapManager : MonoBehaviour
     public float tileMapWidthToHeightRatio;
 
     public BoundsInt tileMapBounds;
+    public float cameraGameBoundsLeeway;
     void Awake()
     {
         UnpackObjectReferences();
@@ -73,7 +75,7 @@ public class TileMapManager : MonoBehaviour
 
     void UpdateGameBorderBox()
     {
-        gameBorderBox.offset = new ((float)tileMapBounds.xMax/2, (float)tileMapBounds.yMax/2);
-        gameBorderBox.size = new((float)tileMapBounds.xMax, (float)tileMapBounds.yMax);
+        gameBorderBox.offset = new ((float)tileMapBounds.xMax/2 +(cameraGameBoundsLeeway/2), (float)tileMapBounds.yMax/2 + (cameraGameBoundsLeeway/2));
+        gameBorderBox.size = new((float)tileMapBounds.xMax + cameraGameBoundsLeeway, (float)tileMapBounds.yMax + cameraGameBoundsLeeway);
     }
 }
