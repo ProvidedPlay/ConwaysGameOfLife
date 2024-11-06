@@ -9,6 +9,7 @@ TagManager:
   - Virtual Camera
   - Game Bounds
   - UI
+  - Tile Brush
   layers:
   - Default
   - TransparentFX

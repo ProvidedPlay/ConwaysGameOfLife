@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     public TileMapManager tileMapManager;
     public CameraToGameBoardResizer cameraController;
     public SettingsManager settingsManager;
+    public BrushManager brushManager;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
@@ -83,6 +84,7 @@ public class GameManager : MonoBehaviour
         tileMapManager = GetComponent<TileMapManager>();
         cameraController = GetComponent<CameraToGameBoardResizer>();
         settingsManager = GameObject.FindGameObjectWithTag("UI").GetComponent<SettingsManager>();
+        brushManager = GetComponent<BrushManager>();
     }
 
 
@@ -152,6 +154,7 @@ public class GameManager : MonoBehaviour
     {
         StopAllCoroutines();
         SetUpGameBoard();
+        brushManager.InitializeBrushManager();
         StartCoroutine(GameLoop());
     }
     public void GameLoad(LevelData levelData)
@@ -186,6 +189,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("Coroutine state: game setup");
         settingsManager.UpdateGameStateText("EDIT MODE");
         ToggleOverlayGrid(CheckIfToggleGridOnByDefault());
+        brushManager.ToggleBrushCursor(true);
         while (!proceedToNextGameState)
         {
             //code in here will run during this game state
@@ -205,6 +209,7 @@ public class GameManager : MonoBehaviour
         settingsManager.UpdateGameStateText("PLAY MODE");
         ClearSelectedTiles();
         ToggleOverlayGrid(false);
+        brushManager.ToggleBrushCursor(false);
         while (!proceedToNextGameState)
         {
             //code in here will run during this game state
@@ -244,6 +249,11 @@ public class GameManager : MonoBehaviour
         if (Input.GetMouseButtonUp(0))
         {
             ClearSelectedTiles();
+        }
+        if (brushManager.brushCursorActive)
+        {
+            Vector3Int mousePosition = GetTransformAtMousePosition();
+            brushManager.ShowBrushAtMousePosition(mousePosition);
         }
     }
     void FlipTileAtPosition(Vector3Int mousePosition)
