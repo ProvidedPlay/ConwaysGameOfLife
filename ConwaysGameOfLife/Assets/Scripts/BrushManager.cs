@@ -19,6 +19,7 @@ public class BrushManager : MonoBehaviour
 
     public BrushData activeBrushData;
     public BrushData[] allBrushDataObjects;
+    public BrushData[] customBrushDataObjects;
 
     void Awake()
     {
@@ -56,17 +57,17 @@ public class BrushManager : MonoBehaviour
     }
     public void InitializeBrushManager()
     {
-        SelectBrushType(defaultBrushIndex);
+        SelectBrushType(defaultBrushIndex, true);
     }
     public void ToggleBrushCursor(bool cursorActive)
     {
         brushCursorActive = cursorActive;
         activeBrushTileMapRenderer.renderingLayerMask = cursorActive ? (uint)2 : (uint)0; //render mask '2' is 'default' aka it shows on camera, render mask 0 is 'nothing' aka it doesnt render on anything
     }
-    public void SelectBrushType(int brushIndex)
+    public void SelectBrushType(int brushIndex, bool isPreset)
     {
         ClearBrushTileMap();
-        activeBrushData = allBrushDataObjects[brushIndex];
+        activeBrushData = isPreset ? allBrushDataObjects[brushIndex] : customBrushDataObjects[brushIndex];
         PopulateBrushTileMapWithActiveBrush();
     }
     public void ShowBrushAtMousePosition(Vector3Int mousePosition)

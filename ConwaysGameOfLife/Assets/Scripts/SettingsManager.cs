@@ -20,6 +20,9 @@ public class SettingsManager : MonoBehaviour
     public TMP_InputField gridSizeXAxisText;
     public TMP_InputField gridSizeYAxisInputField;
 
+    public TMP_Dropdown presetBrushesDropdown;
+    public TMP_Dropdown customBrushesDropdown;
+
     public SlideToHideMenu sideMenu;
     public SlideToHideMenu showMenuButton;
     public SlideToHideMenu brushMenu;
@@ -142,6 +145,23 @@ public class SettingsManager : MonoBehaviour
         else
         {
             showBrushMenuButton.SlideToHide(true, brushMenu);
+        }
+    }
+
+    public void SelectPresetBrushesDropdownItem()
+    {
+        if (presetBrushesDropdown != null)
+        {
+            int dropdownIndex = presetBrushesDropdown.value;
+            gameManager.brushManager.SelectBrushType(dropdownIndex, true);
+        }
+    }
+    public void SelectCustomBrushesDropdownItem()
+    {
+        if (customBrushesDropdown != null)
+        {
+            int dropdownIndex = customBrushesDropdown.value;
+            gameManager.brushManager.SelectBrushType(dropdownIndex, true);
         }
     }
 

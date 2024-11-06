@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
 
     public Color onColor = Color.white;
     public Color offColor = Color.black;
+    public Color deadColor = Color.black;
 
     public int tilemapZAxisPosition;
     public int maxHorizontalCellsBeforeGridDefaultOff;
@@ -295,7 +296,7 @@ public class GameManager : MonoBehaviour
      */
     void KillOrBirthCell(Vector3Int tilePosition, bool isCellAlive)
     {
-        ColorTile(tilePosition, tileMap, isCellAlive ? onColor : offColor);
+        ColorTile(tilePosition, tileMap, isCellAlive ? onColor : deadColor);
 
         if (isCellAlive)
         {
