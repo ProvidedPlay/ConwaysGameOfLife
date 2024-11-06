@@ -22,6 +22,9 @@ public class SettingsManager : MonoBehaviour
 
     public SlideToHideMenu sideMenu;
     public SlideToHideMenu showMenuButton;
+    public SlideToHideMenu brushMenu;
+    public SlideToHideMenu showBrushMenuButton;
+
 
 
     private void Awake()
@@ -84,7 +87,6 @@ public class SettingsManager : MonoBehaviour
     }
     public void PressShowHideSideMenu(bool hideSideMenu)
     {
-        Debug.Log("code run");
         if (hideSideMenu)
         {
             sideMenu.SlideToHide(true, showMenuButton);
@@ -106,7 +108,6 @@ public class SettingsManager : MonoBehaviour
     {
         int yAxisValueInt = int.Parse(gridSizeYAxisInputField.text);
         string xAxisText = TileMapGenerationHelper.GetTileMapWidth(yAxisValueInt, gameManager.tileMapManager.tileMapWidthToHeightRatio).ToString();
-        Debug.Log(xAxisText);
 
         SetUIText.SetInputFieldText(gridSizeXAxisText, xAxisText);
     }
@@ -129,4 +130,19 @@ public class SettingsManager : MonoBehaviour
         LevelData newLevelData = SaveLoadManager.LoadLevel();
         gameManager.GameLoad(newLevelData);
     }
+    /*
+     * Button Logic (Brush Menu)
+     */
+    public void PressShowHideBrushMenu(bool hideBrushMenu)
+    {
+        if (hideBrushMenu)
+        {
+            brushMenu.SlideToHide(true, showBrushMenuButton);
+        }
+        else
+        {
+            showBrushMenuButton.SlideToHide(true, brushMenu);
+        }
+    }
+
 }
