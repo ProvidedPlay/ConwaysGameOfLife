@@ -207,7 +207,6 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Coroutine state: game playing");
         settingsManager.UpdateGameStateText("PLAY MODE");
-        ClearSelectedTiles();
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
         while (!proceedToNextGameState)
@@ -240,15 +239,17 @@ public class GameManager : MonoBehaviour
      */
     void CustomizeGameBoard()
     {
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(0) && !Input.GetMouseButton(1))
         {
             Vector3Int mousePosition = GetTransformAtMousePosition();
 
-            FlipTileAtPosition(mousePosition);
+            FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
         }
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButton(1) && !Input.GetMouseButton(0))
         {
-            ClearSelectedTiles();
+            Vector3Int mousePosition = GetTransformAtMousePosition();
+
+            FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), false);
         }
         if (brushManager.brushCursorActive)
         {
@@ -256,33 +257,25 @@ public class GameManager : MonoBehaviour
             brushManager.ShowBrushAtMousePosition(mousePosition);
         }
     }
-    void FlipTileAtPosition(Vector3Int mousePosition)
+    void FlipTileAtPosition(List<Vector3Int> brushCellPositions, bool flipTileOn)
     {
         //Debug.Log("attempting to flip at "+ mousePosition);
-        if (!EventSystem.current.IsPointerOverGameObject() && !selectedTiles.ContainsKey(mousePosition) && allTiles.ContainsKey(mousePosition))
+        if (!EventSystem.current.IsPointerOverGameObject())
         {
-            //Debug.Log(mousePosition + " flipped");
-            //allTiles[mousePosition] = !allTiles[mousePosition]; OLD
-            KillOrBirthCell(mousePosition, !allTiles[mousePosition]);
-            AddToSelectedTiles(mousePosition, allTiles[mousePosition]);
-            //Color desiredColor = allTiles[mousePosition] == true ? onColor : offColor; OLD
-            //ColorTile(mousePosition, tileMap, desiredColor);OLD
+            foreach (Vector3Int brushCellPosition in brushCellPositions)
+            {
+                if (allTiles.ContainsKey(brushCellPosition) && allTiles[brushCellPosition] != flipTileOn)
+                {
+                    KillOrBirthCell(brushCellPosition, flipTileOn);
+                }
+            }
         }
-
     }
     Vector3Int GetTransformAtMousePosition()
     {
         Vector3Int mousePosition = Vector3Int.FloorToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
         mousePosition.z = tilemapZAxisPosition; //this is because the camera z axis is not the same value as the tile z axis, and we want the tile z axis;
         return mousePosition;
-    }
-    void AddToSelectedTiles(Vector3Int tilePosition, bool tileIsAlive)
-    {
-        selectedTiles.Add(tilePosition, tileIsAlive);
-    }
-    void ClearSelectedTiles()
-    {
-        selectedTiles.Clear();
     }
 
     /*

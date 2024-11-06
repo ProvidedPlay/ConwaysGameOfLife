@@ -9,8 +9,6 @@ public class BrushData
 
     public Sprite brushImage;
 
-    public bool canDragBrush;
-
     public List<Vector3Int> livingCellsRelativeToBrushOrigin;
     public Vector2Int brushSize;
 }

@@ -10,6 +10,7 @@ TagManager:
   - Game Bounds
   - UI
   - Tile Brush
+  - Tile Brush Renderer
   layers:
   - Default
   - TransparentFX
