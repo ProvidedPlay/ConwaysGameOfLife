@@ -7,8 +7,8 @@ public class BrushData
 {
     public string brushName;
 
-    public Sprite brushImage;
+    public bool canDrag;
 
-    public List<Vector3Int> livingCellsRelativeToBrushOrigin;
-    public Vector2Int brushSize;
+    public Vector3Int[] livingCellsRelativeToBrushOrigin;
+    public Vector3Int brushCenter;
 }

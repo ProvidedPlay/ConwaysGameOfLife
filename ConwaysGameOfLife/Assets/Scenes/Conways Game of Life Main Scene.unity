@@ -1539,12 +1539,12 @@ MonoBehaviour:
   cameraResizer: {fileID: 379804044}
   gameManager: {fileID: 379804041}
   gameBorderBox: {fileID: 1573629728}
-  tileMapWidth: 96
-  tileMapHeight: 54
+  tileMapWidth: 192
+  tileMapHeight: 108
   tileMapWidthToHeightRatio: 1.777778
   tileMapBounds:
     m_Position: {x: 0, y: 0, z: 0}
-    m_Size: {x: 96, y: 54, z: 1}
+    m_Size: {x: 192, y: 108, z: 1}
   cameraGameBoundsLeeway: 0.5
 --- !u!114 &379804044
 MonoBehaviour:
@@ -1562,13 +1562,13 @@ MonoBehaviour:
   virtualCamera: {fileID: 1849533974}
   tileMap: {fileID: 883073596}
   gameManager: {fileID: 379804041}
-  cameraBounds: {x: 96, y: 54}
-  cameraEdgeBuffer: 0.216
+  cameraBounds: {x: 192, y: 108}
+  cameraEdgeBuffer: 0.432
   cameraEdgeBufferPercentOfHeight: 0.004
   cameraAspectRatio: 1.77777777777778
   minimumCameraOrthographicHeight: 0
-  currentCameraOrthographicHeight: 26.784
-  currentCameraOrthographicWidth: 47.784
+  currentCameraOrthographicHeight: 53.568
+  currentCameraOrthographicWidth: 95.568
   maxZoomFactor: 10
   zoomFactor: 10
   cameraPanMouseButton: 2
@@ -1585,31 +1585,114 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   activeBrushTileMap: {fileID: 1406626919}
-  activeBrushTileMapRenderer: {fileID: 0}
+  activeBrushTileMapRenderer: {fileID: 1406626918}
   brushTile: {fileID: 11400000, guid: b013a98a9ecc99444a561213266891dc, type: 2}
   activeBrushObject: {fileID: 2077545517}
   gameManager: {fileID: 379804041}
   brushTileMapColoredTiles: []
   brushCursorActive: 0
+  defaultBrushIndex: 6
   activeBrushData:
     brushName: 
-    brushImage: {fileID: 0}
+    canDrag: 0
     livingCellsRelativeToBrushOrigin: []
-    brushSize: {x: 0, y: 0}
+    brushCenter: {x: 0, y: 0, z: 0}
   allBrushDataObjects:
   - brushName: Default Brush
-    brushImage: {fileID: 7482667652216324306, guid: 55ddb1201c327d84dadafab4266ec65c, type: 3}
+    canDrag: 1
     livingCellsRelativeToBrushOrigin:
     - {x: 0, y: 0, z: 0}
-    brushSize: {x: 1, y: 1}
+    brushCenter: {x: 0, y: 0, z: 0}
   - brushName: Thick Brush (4)
-    brushImage: {fileID: 21300000, guid: 225c41f6231641547b2f2ab8427bc134, type: 3}
+    canDrag: 1
     livingCellsRelativeToBrushOrigin:
     - {x: 0, y: 0, z: 0}
     - {x: 0, y: 1, z: 0}
     - {x: 1, y: 0, z: 0}
     - {x: 1, y: 1, z: 0}
-    brushSize: {x: 2, y: 2}
+    brushCenter: {x: 0, y: 0, z: 0}
+  - brushName: Thick Brush (9)
+    canDrag: 1
+    livingCellsRelativeToBrushOrigin:
+    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 1, z: 0}
+    - {x: 0, y: 2, z: 0}
+    - {x: 1, y: 0, z: 0}
+    - {x: 1, y: 1, z: 0}
+    - {x: 1, y: 2, z: 0}
+    - {x: 2, y: 0, z: 0}
+    - {x: 2, y: 1, z: 0}
+    - {x: 2, y: 2, z: 0}
+    brushCenter: {x: 1, y: 1, z: 0}
+  - brushName: R-Pentomino
+    canDrag: 0
+    livingCellsRelativeToBrushOrigin:
+    - {x: 0, y: 1, z: 0}
+    - {x: 1, y: 0, z: 0}
+    - {x: 1, y: 1, z: 0}
+    - {x: 1, y: 2, z: 0}
+    - {x: 2, y: 2, z: 0}
+    brushCenter: {x: 1, y: 1, z: 0}
+  - brushName: DieHard
+    canDrag: 0
+    livingCellsRelativeToBrushOrigin:
+    - {x: 0, y: 1, z: 0}
+    - {x: 1, y: 0, z: 0}
+    - {x: 1, y: 1, z: 0}
+    - {x: 5, y: 0, z: 0}
+    - {x: 6, y: 0, z: 0}
+    - {x: 6, y: 2, z: 0}
+    - {x: 7, y: 0, z: 0}
+    brushCenter: {x: 3, y: 1, z: 0}
+  - brushName: Glider
+    canDrag: 0
+    livingCellsRelativeToBrushOrigin:
+    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 1, z: 0}
+    - {x: 0, y: 2, z: 0}
+    - {x: 1, y: 2, z: 0}
+    - {x: 2, y: 1, z: 0}
+    brushCenter: {x: 1, y: 1, z: 0}
+  - brushName: Gosper Glider Gun
+    canDrag: 0
+    livingCellsRelativeToBrushOrigin:
+    - {x: 0, y: 3, z: 0}
+    - {x: 0, y: 4, z: 0}
+    - {x: 1, y: 3, z: 0}
+    - {x: 1, y: 4, z: 0}
+    - {x: 10, y: 2, z: 0}
+    - {x: 10, y: 3, z: 0}
+    - {x: 10, y: 4, z: 0}
+    - {x: 11, y: 1, z: 0}
+    - {x: 11, y: 5, z: 0}
+    - {x: 12, y: 0, z: 0}
+    - {x: 12, y: 6, z: 0}
+    - {x: 13, y: 0, z: 0}
+    - {x: 13, y: 6, z: 0}
+    - {x: 14, y: 3, z: 0}
+    - {x: 15, y: 1, z: 0}
+    - {x: 15, y: 5, z: 0}
+    - {x: 16, y: 2, z: 0}
+    - {x: 16, y: 3, z: 0}
+    - {x: 16, y: 4, z: 0}
+    - {x: 17, y: 3, z: 0}
+    - {x: 20, y: 4, z: 0}
+    - {x: 20, y: 5, z: 0}
+    - {x: 20, y: 6, z: 0}
+    - {x: 21, y: 4, z: 0}
+    - {x: 21, y: 5, z: 0}
+    - {x: 21, y: 6, z: 0}
+    - {x: 22, y: 3, z: 0}
+    - {x: 22, y: 7, z: 0}
+    - {x: 24, y: 2, z: 0}
+    - {x: 24, y: 3, z: 0}
+    - {x: 24, y: 7, z: 0}
+    - {x: 24, y: 8, z: 0}
+    - {x: 34, y: 5, z: 0}
+    - {x: 34, y: 6, z: 0}
+    - {x: 35, y: 5, z: 0}
+    - {x: 35, y: 6, z: 0}
+    brushCenter: {x: 16, y: 2, z: 0}
 --- !u!1 &435660109
 GameObject:
   m_ObjectHideFlags: 0
@@ -1754,7 +1837,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 26.784
+  orthographic size: 53.568
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -1779,7 +1862,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 48, y: 27, z: -10}
+  m_LocalPosition: {x: 96, y: 54, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6037,19 +6120,19 @@ CompositeCollider2D:
   m_ColliderPaths:
   - m_Collider: {fileID: 1573629728}
     m_ColliderPaths:
-    - - X: 965000000
-        Y: 545000000
+    - - X: 1924999936
+        Y: 1084999936
       - X: 0
-        Y: 545000000
+        Y: 1084999936
       - X: 0
         Y: 0
-      - X: 965000000
+      - X: 1924999936
         Y: 0
   m_CompositePaths:
     m_Paths:
-    - - {x: 96.49997, y: 0}
-      - {x: 96.49997, y: 54.5}
-      - {x: 0, y: 54.49997}
+    - - {x: 192.49997, y: 0}
+      - {x: 192.49997, y: 108.49999}
+      - {x: 0, y: 108.49997}
       - {x: 0.000029300001, y: 0}
   m_VertexDistance: 0.0005
   m_OffsetDistance: 0.00005
@@ -6114,7 +6197,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 1
-  m_Offset: {x: 48.25, y: 27.25}
+  m_Offset: {x: 96.25, y: 54.25}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -6125,7 +6208,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 96.5, y: 54.5}
+  m_Size: {x: 192.5, y: 108.5}
   m_EdgeRadius: 0
 --- !u!1 &1618160622
 GameObject:
@@ -7335,7 +7418,7 @@ MonoBehaviour:
   m_Follow: {fileID: 0}
   m_Lens:
     FieldOfView: 34
-    OrthographicSize: 26.784
+    OrthographicSize: 53.568
     NearClipPlane: 0.1
     FarClipPlane: 1000
     Dutch: 0
@@ -7373,7 +7456,7 @@ Transform:
   m_GameObject: {fileID: 1849533973}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 48, y: 27, z: -10}
+  m_LocalPosition: {x: 96, y: 54, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

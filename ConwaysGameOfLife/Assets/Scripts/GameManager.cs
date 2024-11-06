@@ -239,11 +239,23 @@ public class GameManager : MonoBehaviour
      */
     void CustomizeGameBoard()
     {
-        if (Input.GetMouseButton(0) && !Input.GetMouseButton(1))
+        if (brushManager.activeBrushData.canDrag)
         {
-            Vector3Int mousePosition = GetTransformAtMousePosition();
+            if (Input.GetMouseButton(0) && !Input.GetMouseButton(1))
+            {
+                Vector3Int mousePosition = GetTransformAtMousePosition();
 
-            FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
+                FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
+            }
+        }
+        if (!brushManager.activeBrushData.canDrag)
+        {
+            if (Input.GetMouseButtonDown(0) && !Input.GetMouseButton(1))
+            {
+                Vector3Int mousePosition = GetTransformAtMousePosition();
+
+                FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
+            }
         }
         if (Input.GetMouseButton(1) && !Input.GetMouseButton(0))
         {
