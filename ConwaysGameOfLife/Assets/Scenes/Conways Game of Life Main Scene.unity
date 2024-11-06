@@ -1591,7 +1591,7 @@ MonoBehaviour:
   gameManager: {fileID: 379804041}
   brushTileMapColoredTiles: []
   brushCursorActive: 0
-  defaultBrushIndex: 6
+  defaultBrushIndex: 8
   activeBrushData:
     brushName: 
     canDrag: 0
@@ -1693,6 +1693,37 @@ MonoBehaviour:
     - {x: 35, y: 5, z: 0}
     - {x: 35, y: 6, z: 0}
     brushCenter: {x: 16, y: 2, z: 0}
+  - brushName: Block Laying Gun
+    canDrag: 0
+    livingCellsRelativeToBrushOrigin:
+    - {x: 0, y: 0, z: 0}
+    - {x: 2, y: 0, z: 0}
+    - {x: 2, y: 1, z: 0}
+    - {x: 4, y: 2, z: 0}
+    - {x: 4, y: 3, z: 0}
+    - {x: 4, y: 4, z: 0}
+    - {x: 6, y: 3, z: 0}
+    - {x: 6, y: 4, z: 0}
+    - {x: 6, y: 5, z: 0}
+    - {x: 7, y: 4, z: 0}
+    brushCenter: {x: 3, y: 2, z: 0}
+  - brushName: Block Laying Gun
+    canDrag: 0
+    livingCellsRelativeToBrushOrigin:
+    - {x: 0, y: 0, z: 0}
+    - {x: 0, y: 3, z: 0}
+    - {x: 0, y: 4, z: 0}
+    - {x: 1, y: 1, z: 0}
+    - {x: 1, y: 4, z: 0}
+    - {x: 2, y: 0, z: 0}
+    - {x: 2, y: 1, z: 0}
+    - {x: 2, y: 4, z: 0}
+    - {x: 3, y: 2, z: 0}
+    - {x: 4, y: 0, z: 0}
+    - {x: 4, y: 1, z: 0}
+    - {x: 4, y: 2, z: 0}
+    - {x: 4, y: 4, z: 0}
+    brushCenter: {x: 2, y: 2, z: 0}
 --- !u!1 &435660109
 GameObject:
   m_ObjectHideFlags: 0
