@@ -20,6 +20,10 @@ public class SettingsManager : MonoBehaviour
     public TMP_InputField gridSizeXAxisText;
     public TMP_InputField gridSizeYAxisInputField;
 
+    public CellColourData blankCellColourData;
+    public CellColourData deadCellColourData;
+    public CellColourData aliveCellColourData;
+
     public TMP_Dropdown presetBrushesDropdown;
     public TMP_Dropdown customBrushesDropdown;
 
@@ -60,6 +64,13 @@ public class SettingsManager : MonoBehaviour
     public void UpdateSpeedFactorText()
     {
         SetUIText.SetText(gameSpeedFactorText, gameManager.GameSpeedFactor.ToString()+ "X");
+    }
+
+    public static void ClampColourInputValueTo255(TMP_InputField colourInputField)
+    {
+        int newColourValue = Mathf.Clamp(int.Parse(colourInputField.text), 0, 255);
+
+        colourInputField.text = newColourValue.ToString();
     }
 
     /*
@@ -163,6 +174,20 @@ public class SettingsManager : MonoBehaviour
             int dropdownIndex = customBrushesDropdown.value;
             gameManager.brushManager.SelectBrushType(dropdownIndex, true);
         }
+    }
+
+    /*
+     * Advanced Settings Menu Buttons
+     */
+
+    public void OnClickApplyAdvancedSettings()
+    {
+        //Apply color settings for each cell color (rgb)
+        gameManager.onColor = SettingsHelper.GenerateColourFromCellColourDataInputs(aliveCellColourData);
+        gameManager.offColor = SettingsHelper.GenerateColourFromCellColourDataInputs(blankCellColourData);
+        gameManager.deadColor = SettingsHelper.GenerateColourFromCellColourDataInputs(deadCellColourData);
+
+        gameManager.GameStart();
     }
 
 }
