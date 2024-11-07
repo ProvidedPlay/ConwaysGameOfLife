@@ -69,7 +69,7 @@ public class GameManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Escape))//restart from scratch
         {
-            GameStart();
+            GameRestart();
         }
 
     }
@@ -156,6 +156,12 @@ public class GameManager : MonoBehaviour
         StopAllCoroutines();
         SetUpGameBoard();
         brushManager.InitializeBrushManager();
+        StartCoroutine(GameLoop());
+    }
+    public void GameRestart()
+    {
+        StopAllCoroutines();
+        SetUpGameBoard();
         StartCoroutine(GameLoop());
     }
     public void GameLoad(LevelData levelData)

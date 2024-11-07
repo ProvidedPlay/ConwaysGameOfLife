@@ -187,7 +187,7 @@ public class SettingsManager : MonoBehaviour
         gameManager.offColor = SettingsHelper.GenerateColourFromCellColourDataInputs(blankCellColourData);
         gameManager.deadColor = SettingsHelper.GenerateColourFromCellColourDataInputs(deadCellColourData);
 
-        gameManager.GameStart();
+        gameManager.GameRestart();
     }
 
 }
