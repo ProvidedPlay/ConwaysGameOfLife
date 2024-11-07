@@ -207,6 +207,7 @@ public class GameManager : MonoBehaviour
             CustomizeGameBoard();
             yield return null;
         }
+        brushManager.ToggleSelectionCursor(false);
         yield return new WaitForEndOfFrame();
         proceedToNextGameState = false;
     }
@@ -216,6 +217,7 @@ public class GameManager : MonoBehaviour
         settingsManager.UpdateGameStateText("PLAY MODE");
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
+        brushManager.ToggleSelectionCursor(false);
         while (!proceedToNextGameState)
         {
             //code in here will run during this game state
@@ -246,34 +248,45 @@ public class GameManager : MonoBehaviour
      */
     void CustomizeGameBoard()
     {
-        if (brushManager.activeBrushData.canDrag)
-        {
-            if (Input.GetMouseButton(0) && !Input.GetMouseButton(1))
-            {
-                Vector3Int mousePosition = GetTransformAtMousePosition();
-
-                FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
-            }
-        }
-        if (!brushManager.activeBrushData.canDrag)
-        {
-            if (Input.GetMouseButtonDown(0) && !Input.GetMouseButton(1))
-            {
-                Vector3Int mousePosition = GetTransformAtMousePosition();
-
-                FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
-            }
-        }
-        if (Input.GetMouseButton(1) && !Input.GetMouseButton(0))
-        {
+        if(Input.GetMouseButton(0) || Input.GetMouseButton(1) || brushManager.brushCursorActive || brushManager.selectionCursorActive){
             Vector3Int mousePosition = GetTransformAtMousePosition();
-
-            FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), false);
-        }
-        if (brushManager.brushCursorActive)
-        {
-            Vector3Int mousePosition = GetTransformAtMousePosition();
-            brushManager.ShowBrushAtMousePosition(mousePosition);
+            if(brushManager.brushCursorActive)
+            {
+                brushManager.ShowBrushAtMousePosition(mousePosition);
+                if (brushManager.activeBrushData.canDrag)
+                {
+                    if (Input.GetMouseButton(0) && !Input.GetMouseButton(1))
+                    {
+                        FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
+                    }
+                }
+                if (!brushManager.activeBrushData.canDrag)
+                {
+                    if (Input.GetMouseButtonDown(0) && !Input.GetMouseButton(1))
+                    {
+                        FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), true);
+                    }
+                }
+                if (Input.GetMouseButton(1) && !Input.GetMouseButton(0))
+                {
+                    FlipTileAtPosition(brushManager.GetBrushCellPositionsAtMousePosition(mousePosition), false);
+                }
+            }
+            else if(brushManager.selectionCursorActive)
+            {
+                if(Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+                {
+                    brushManager.StartSelectionBoxDrag(mousePosition);
+                }
+                if (Input.GetMouseButton(0) && !EventSystem.current.IsPointerOverGameObject())
+                {
+                    brushManager.DragSelectionBox(mousePosition);
+                }
+                if (Input.GetMouseButtonUp(0))
+                {
+                    brushManager.EndSelectionBoxDrag(false);
+                }
+            }
         }
     }
     void FlipTileAtPosition(List<Vector3Int> brushCellPositions, bool flipTileOn)

@@ -15,11 +15,18 @@ public class BrushManager : MonoBehaviour
     public List<Vector3Int> brushTileMapColoredTiles;
 
     public bool brushCursorActive;
+    public bool selectionCursorActive;
+    public bool selectionCursorIsDragging;
     public int defaultBrushIndex;
+
+    public string defaultCustomBrushName;
+
+    public Vector3Int selectionBoxStartPoint;
+    public Vector3Int selectionBoxEndPoint;
 
     public BrushData activeBrushData;
     public BrushData[] allBrushDataObjects;
-    public BrushData[] customBrushDataObjects;
+    public List <BrushData> customBrushDataObjects;
 
     void Awake()
     {
@@ -34,6 +41,10 @@ public class BrushManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F))
         {
             FlipBrushAxis(false, true);
+        }
+        if(selectionCursorIsDragging && !selectionCursorActive)
+        {
+            EndSelectionBoxDrag(true);
         }
     }
     void UnpackObjectReferences()
@@ -62,6 +73,10 @@ public class BrushManager : MonoBehaviour
     public void ToggleBrushCursor(bool cursorActive)
     {
         brushCursorActive = cursorActive;
+        if (cursorActive)
+        {
+            ToggleSelectionCursor(false);
+        }
         activeBrushTileMapRenderer.renderingLayerMask = cursorActive ? (uint)2 : (uint)0; //render mask '2' is 'default' aka it shows on camera, render mask 0 is 'nothing' aka it doesnt render on anything
     }
     public void SelectBrushType(int brushIndex, bool isPreset)
@@ -135,5 +150,56 @@ public class BrushManager : MonoBehaviour
             activeBrushData.brushCenter.y = -activeBrushData.brushCenter.y;
         }
         RerenderBrushTileMap();
+    }
+    /*
+     * Selection Box Commands
+     */
+    public void StartSelectionBoxDrag(Vector3Int mousePosition)
+    {
+        selectionBoxStartPoint = mousePosition;
+        selectionBoxEndPoint = mousePosition;
+        selectionCursorIsDragging = true;
+    }
+    public void DragSelectionBox(Vector3Int mousePosition)
+    {
+        if (selectionCursorIsDragging)
+        {
+            selectionBoxEndPoint = mousePosition;
+        }
+    }
+    public void EndSelectionBoxDrag(bool cancelSelect)
+    {
+        if (selectionCursorIsDragging)
+        {
+            Debug.Log("clicked");
+            selectionCursorIsDragging = false;
+            if (!cancelSelect)
+            {
+                Debug.Log("Selection Box coords. Start: " + selectionBoxStartPoint + ". End: " + selectionBoxEndPoint);
+                BrushData newBrush = SettingsHelper.GenerateBrushFromSelection(selectionBoxStartPoint, selectionBoxEndPoint, defaultCustomBrushName, gameManager);
+                Debug.Log(newBrush.livingCellsRelativeToBrushOrigin);
+                AddBrushToCustomBrushes(newBrush);
+                ToggleBrushCursor(true);
+            }
+        }
+        selectionBoxStartPoint = Vector3Int.zero;
+        selectionBoxEndPoint = Vector3Int.zero;
+    }
+    public void ToggleSelectionCursor(bool cursorActive)
+    {
+        selectionCursorActive = cursorActive;
+        if(cursorActive)
+        {
+            ToggleBrushCursor(false);
+        }
+    }
+    /*
+     * Custom Brush Import Commands
+     */
+    public void AddBrushToCustomBrushes(BrushData brushData)
+    {
+        customBrushDataObjects.Add(brushData);
+        SettingsHelper.AddCustomBrushDropdownMenuItem(brushData.brushName, gameManager.settingsManager);
+
     }
 }

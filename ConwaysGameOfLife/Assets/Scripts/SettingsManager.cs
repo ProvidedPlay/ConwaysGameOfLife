@@ -72,7 +72,6 @@ public class SettingsManager : MonoBehaviour
 
         colourInputField.text = newColourValue.ToString();
     }
-
     /*
      * Button Logic (Side Menu)
      */
@@ -172,8 +171,12 @@ public class SettingsManager : MonoBehaviour
         if (customBrushesDropdown != null)
         {
             int dropdownIndex = customBrushesDropdown.value;
-            gameManager.brushManager.SelectBrushType(dropdownIndex, true);
+            gameManager.brushManager.SelectBrushType(dropdownIndex, false);
         }
+    }
+    public void OnClickCopyButton()
+    {
+        gameManager.brushManager.ToggleSelectionCursor(true);
     }
 
     /*

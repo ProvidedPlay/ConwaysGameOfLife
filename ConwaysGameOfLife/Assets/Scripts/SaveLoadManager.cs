@@ -5,6 +5,8 @@ using UnityEngine;
 public static class SaveLoadManager
 {
     public static string saveFolderDirectory = "/SaveData/";
+    public static string customBrushesFolderDirectory = "/Brushes/CustomBrushes";
+    public static string presetBrushesFolderDirectory = "/Brushes/PresetBrushes";
     public static void SaveLevelWithName(GameManager gameManager)
     {
         //create save data directory if it doesnt exist
