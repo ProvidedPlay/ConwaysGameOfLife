@@ -5,9 +5,12 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 using TMPro;
+using Cinemachine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    public Camera gameCamera;
     public Tilemap tileMap;
     public Tilemap overlayGridTileMap;
     public TilemapRenderer overlayGridTileMapRenderer;
@@ -18,6 +21,7 @@ public class GameManager : MonoBehaviour
     public CameraToGameBoardResizer cameraController;
     public SettingsManager settingsManager;
     public BrushManager brushManager;
+    public UIManager uiManager;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
@@ -85,7 +89,9 @@ public class GameManager : MonoBehaviour
         tileMapManager = GetComponent<TileMapManager>();
         cameraController = GetComponent<CameraToGameBoardResizer>();
         settingsManager = GameObject.FindGameObjectWithTag("UI").GetComponent<SettingsManager>();
+        uiManager = GameObject.FindGameObjectWithTag("UI").GetComponent<UIManager>();
         brushManager = GetComponent<BrushManager>();
+        gameCamera = Camera.main;
     }
 
 
@@ -305,7 +311,7 @@ public class GameManager : MonoBehaviour
     }
     Vector3Int GetTransformAtMousePosition()
     {
-        Vector3Int mousePosition = Vector3Int.FloorToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+        Vector3Int mousePosition = Vector3Int.FloorToInt(gameCamera.ScreenToWorldPoint(Input.mousePosition));
         mousePosition.z = tilemapZAxisPosition; //this is because the camera z axis is not the same value as the tile z axis, and we want the tile z axis;
         return mousePosition;
     }

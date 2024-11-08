@@ -11,6 +11,7 @@ TagManager:
   - UI
   - Tile Brush
   - Tile Brush Renderer
+  - Selection Box
   layers:
   - Default
   - TransparentFX

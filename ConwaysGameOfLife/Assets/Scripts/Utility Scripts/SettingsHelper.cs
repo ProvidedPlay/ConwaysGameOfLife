@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public static class SettingsHelper
 {
@@ -19,7 +20,6 @@ public static class SettingsHelper
         BoundsInt selectionBounds = new BoundsInt();
         selectionEndPoint.z = 1;//this allows the bounds to have a thickness of one, otherwise it wont look for any tiles
         selectionBounds.SetMinMax(selectionStartPoint, selectionEndPoint);
-        Debug.Log(selectionBounds.ToString());
         //grab a reference to game manager's existing livingcells dict
         Dictionary<Vector3Int, bool> livingCellsInMap = gameManager.livingCells;
 
@@ -38,6 +38,22 @@ public static class SettingsHelper
         return new BrushData(brushName, false, selectedLivingCells, brushCenter);
     }
 
+    public static void GenerateSelectionBox(Vector3Int selectionBoxStartPoint, Vector3Int selectionBoxEndPoint, GameManager gameManager, CanvasScaler uiCanvasScaler)
+    {
+        RectTransform selectionBox = gameManager.uiManager.selectionBox;
+
+        //Finc the minimum vertex and maximum vertex of the two input vertices (start and end point), save them as vector
+        Vector3 selectionBoxMinScreenPosition = gameManager.gameCamera.WorldToScreenPoint(Vector3.Min(selectionBoxStartPoint, selectionBoxEndPoint));
+        Vector3 selectionBoxMaxScreenPosition = gameManager.gameCamera.WorldToScreenPoint(Vector3.Max(selectionBoxStartPoint, selectionBoxEndPoint));
+
+        float selectionBoxWidth = Mathf.Abs(selectionBoxMaxScreenPosition.x - selectionBoxMinScreenPosition.x);
+        float selectionBoxHeight = Mathf.Abs(selectionBoxMaxScreenPosition.y - selectionBoxMinScreenPosition.y);
+
+        //set the box position to the prev established min vector, set the width and height to the difference between the min and max vectors (x and y respectively). Correct for the increased UI scaling (ie if localscale is "*1.1", this will be "/1.1")
+        selectionBox.anchoredPosition = new Vector2(selectionBoxMinScreenPosition.x, selectionBoxMinScreenPosition.y)/uiCanvasScaler.transform.localScale;
+        selectionBox.sizeDelta = new Vector2(selectionBoxWidth, selectionBoxHeight)/uiCanvasScaler.transform.localScale;
+
+    }
     public static void AddCustomBrushDropdownMenuItem(string brushName, SettingsManager settingsManager)
     {
         settingsManager.customBrushesDropdown.options.Add(new TMP_Dropdown.OptionData() { text = brushName });

@@ -11,6 +11,7 @@ public class BrushManager : MonoBehaviour
     public TileBase brushTile;
     public GameObject activeBrushObject;
     public GameManager gameManager;
+    RectTransform selectionBox;
 
     public List<Vector3Int> brushTileMapColoredTiles;
 
@@ -46,6 +47,12 @@ public class BrushManager : MonoBehaviour
         {
             EndSelectionBoxDrag(true);
         }
+        /*
+        if (selectionCursorActive && selectionCursorIsDragging && selectionBoxStartPoint != Vector3Int.zero)
+        {
+            DrawSelectionBox();
+        }
+        */
     }
     void UnpackObjectReferences()
     {
@@ -64,6 +71,10 @@ public class BrushManager : MonoBehaviour
         if (activeBrushTileMap == null)
         {
             gameManager = GetComponent<GameManager>();
+        }
+        if (selectionBox == null && gameManager.uiManager.selectionBox != null)
+        {
+            selectionBox = gameManager.uiManager.selectionBox;
         }
     }
     public void InitializeBrushManager()
@@ -165,6 +176,7 @@ public class BrushManager : MonoBehaviour
         if (selectionCursorIsDragging)
         {
             selectionBoxEndPoint = mousePosition;
+            DrawSelectionBox();
         }
     }
     public void EndSelectionBoxDrag(bool cancelSelect)
@@ -184,6 +196,7 @@ public class BrushManager : MonoBehaviour
         }
         selectionBoxStartPoint = Vector3Int.zero;
         selectionBoxEndPoint = Vector3Int.zero;
+        DrawSelectionBox();
     }
     public void ToggleSelectionCursor(bool cursorActive)
     {
@@ -192,6 +205,32 @@ public class BrushManager : MonoBehaviour
         {
             ToggleBrushCursor(false);
         }
+    }
+    public void DrawSelectionBox()
+    {
+        //get the current mouse position
+        /*
+        Vector3 currentMouseScreenPosition = Input.mousePosition;
+        Vector3 selectionBoxStartScreenPosition = gameManager.gameCamera.WorldToScreenPoint(selectionBoxStartPoint);
+
+        float selectionBoxWidth = currentMouseScreenPosition.x - selectionBoxStartScreenPosition.x;
+        float selectionBoxHeight = selectionBoxStartScreenPosition.y - currentMouseScreenPosition.y;
+        float selectionBoxXPosition = selectionBoxStartScreenPosition.x;
+        float selectionBoxYPosition = Screen.height - selectionBoxStartScreenPosition.y;
+
+        Rect selectionBoxRect = new(selectionBoxXPosition, selectionBoxYPosition, selectionBoxWidth, selectionBoxHeight);
+        GUI.Box(selectionBoxRect, "");
+        
+
+        Vector3 boxStartScreenPosition = gameManager.gameCamera.WorldToScreenPoint(selectionBoxStartPoint);
+        Vector3 boxEndScreenPosition = gameManager.gameCamera.WorldToScreenPoint(selectionBoxEndPoint);
+
+        float selectionBoxWidth = Mathf.Abs(boxEndScreenPosition.x - boxStartScreenPosition.x);
+        float selectionBoxHeight = Mathf.Abs(boxEndScreenPosition.y - boxStartScreenPosition.y);
+        selectionBox.position = boxStartScreenPosition;
+        selectionBox.sizeDelta = new(selectionBoxWidth, selectionBoxHeight);
+        */
+        SettingsHelper.GenerateSelectionBox(selectionBoxStartPoint, selectionBoxEndPoint, gameManager, gameManager.uiManager.uiCanvasScaler);
     }
     /*
      * Custom Brush Import Commands
