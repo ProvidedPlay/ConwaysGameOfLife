@@ -24,7 +24,6 @@ public static class SaveLoadManager
 
         //create save file at specified path with specified save file name
         File.WriteAllText(saveFilePath, levelDataJSON);
-        Debug.Log(saveFolderPath + saveFilePath);
     }
     public static LevelData LoadLevel()
     {
@@ -45,5 +44,31 @@ public static class SaveLoadManager
             Debug.LogError("Error! No save file found at " + saveFilePath);
             return null;
         }
+    }
+    public static string[] CreateBrushFilePathAndName(bool isCustomBrush) //returns an array of 2 strings: index 0 = brush folder path, 1 = brush folder name
+    {
+        //create custom/preset brush directory if it doesnt exist
+        string brushFolderPath = isCustomBrush ? Application.persistentDataPath + customBrushesFolderDirectory : Application.persistentDataPath + presetBrushesFolderDirectory;
+        if(!Directory.Exists(brushFolderPath))
+        {
+            Directory.CreateDirectory(brushFolderPath);
+        }
+        
+        //create a file path via an explorer window, your brush file will be written to this path later
+        string brushFilePath = FileExplorerHelper.SaveBrush(brushFolderPath);
+
+        //Get the name of the saved brush file (will be used to name your custom brush)
+        string brushName = FileExplorerHelper.ExtractFileNameFromFilepath(brushFilePath);
+
+        //index 0 = brush file path, 1 = brush folder name
+        return new[] { brushFilePath, brushName };
+    }
+    public static void SaveBrushToFilePath(BrushData brushDataObject, string brushSaveFilePath)
+    {
+        //turn the brush data object into a JSON string
+        string levelDataJSON = JsonUtility.ToJson(brushDataObject);
+
+        //create save file at specified path with specified save file name
+        File.WriteAllText(brushSaveFilePath, levelDataJSON);
     }
 }

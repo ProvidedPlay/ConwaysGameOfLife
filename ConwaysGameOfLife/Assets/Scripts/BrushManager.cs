@@ -21,6 +21,7 @@ public class BrushManager : MonoBehaviour
     public int defaultBrushIndex;
 
     public string defaultCustomBrushName;
+    public bool saveBrushAsPreset;
 
     public Vector3Int selectionBoxStartPoint;
     public Vector3Int selectionBoxEndPoint;
@@ -187,10 +188,11 @@ public class BrushManager : MonoBehaviour
             selectionCursorIsDragging = false;
             if (!cancelSelect)
             {
-                Debug.Log("Selection Box coords. Start: " + selectionBoxStartPoint + ". End: " + selectionBoxEndPoint);
-                BrushData newBrush = SettingsHelper.GenerateBrushFromSelection(selectionBoxStartPoint, selectionBoxEndPoint, defaultCustomBrushName, gameManager);
-                Debug.Log(newBrush.livingCellsRelativeToBrushOrigin);
-                AddBrushToCustomBrushes(newBrush);
+                BrushData newBrush = GenerateAndSaveBrush(!saveBrushAsPreset);
+                if (newBrush != null)
+                {
+                    AddBrushToCustomBrushes(newBrush);
+                }
                 ToggleBrushCursor(true);
             }
         }
@@ -233,12 +235,33 @@ public class BrushManager : MonoBehaviour
         SettingsHelper.GenerateSelectionBox(selectionBoxStartPoint, selectionBoxEndPoint, gameManager, gameManager.uiManager.uiCanvasScaler);
     }
     /*
-     * Custom Brush Import Commands
+     * Custom Brush Import/Export Commands
      */
     public void AddBrushToCustomBrushes(BrushData brushData)
     {
         customBrushDataObjects.Add(brushData);
         SettingsHelper.AddCustomBrushDropdownMenuItem(brushData.brushName, gameManager.settingsManager);
 
+    }
+    public BrushData GenerateAndSaveBrush(bool isCustomBrush)
+    {
+        //create and name the new brush save file path
+        string[] brushNameAndPath = SaveLoadManager.CreateBrushFilePathAndName(isCustomBrush);//runs code where cmr types in new brush name, returns empty string if cancelled
+
+        string brushPath = brushNameAndPath[0];
+        string brushName = brushNameAndPath[1];
+
+        Debug.Log("brush path: " + brushPath + " brush name: " + brushName);
+
+        if(brushName != "")
+        {
+            BrushData newBrush = SettingsHelper.GenerateBrushFromSelection(selectionBoxStartPoint, selectionBoxEndPoint, brushName, gameManager);
+            SaveLoadManager.SaveBrushToFilePath(newBrush, brushPath);
+            return newBrush;
+        }
+        else
+        {
+            return null;
+        }
     }
 }

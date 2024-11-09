@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using SFB;
+using System.IO;
 
 public static class FileExplorerHelper
 {
@@ -15,5 +16,14 @@ public static class FileExplorerHelper
     {
         string createdFilePath = StandaloneFileBrowser.SaveFilePanel("Save Map File", saveFileDirectory, "Conway's Game of Life Map", "json");
         return createdFilePath;
+    }
+    public static string SaveBrush(string saveFileDirectory)
+    {
+        string createdFilePath = StandaloneFileBrowser.SaveFilePanel("Save Brush File", saveFileDirectory, "Brush", "json");
+        return createdFilePath;
+    }
+    public static string ExtractFileNameFromFilepath(string fileName)
+    {
+        return Path.GetFileNameWithoutExtension(fileName);
     }
 }
