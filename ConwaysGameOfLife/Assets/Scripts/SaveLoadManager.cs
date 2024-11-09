@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -72,23 +73,52 @@ public static class SaveLoadManager
         File.WriteAllText(brushSaveFilePath, levelDataJSON);
     }
 
-    public static BrushData LoadBrushFromFileExplorer(bool loadCustomBrush)
+    public static List<BrushData> LoadBrushesFromFileExplorer(bool loadCustomBrush)
     {
+        List<BrushData> loadedBrushDataObjects = new List<BrushData>();
         string brushFolderPath = loadCustomBrush ? Application.persistentDataPath + customBrushesFolderDirectory : presetBrushesFolderDirectory;
-        string brushFilePath = FileExplorerHelper.OpenFile(brushFolderPath);
-        if (File.Exists(brushFilePath))
+        string[] brushFilePaths = FileExplorerHelper.ImportBrushes(brushFolderPath);
+        foreach(string brushFilePath in brushFilePaths)
         {
-            //if the brush file exists at the given path, parse the json in that file from string to a new BrushData object
-            string brushDataJson = File.ReadAllText(brushFilePath);
-            BrushData loadedBrushData = JsonUtility.FromJson<BrushData>(brushDataJson);
+            if (File.Exists(brushFilePath))
+            {
+                //if the brush file exists at the given path, parse the json in that file from string to a new BrushData object
+                string brushDataJson = File.ReadAllText(brushFilePath);
+                BrushData loadedBrushData = JsonUtility.FromJson<BrushData>(brushDataJson);
 
-            return loadedBrushData;
+                loadedBrushDataObjects.Add(loadedBrushData);
+            }
+            else
+            {
+                //error message
+                Debug.LogError("Error! No save file found at " + brushFilePath);
+                return null;
+            }
         }
-        else
+        return loadedBrushDataObjects;
+    }
+    public static List<BrushData> LoadAllBrushesFromDirectory(bool loadCustomBrush)//returns an array of all brushes from the default directory
+    {
+        List<BrushData> loadedBrushDataObjects = new List<BrushData>();
+        string brushFolderPath = loadCustomBrush ? Application.persistentDataPath + customBrushesFolderDirectory : presetBrushesFolderDirectory;
+        string[] brushFilePaths = Directory.GetFiles(brushFolderPath);
+        foreach (string brushFilePath in brushFilePaths)
         {
-            //error message
-            Debug.LogError("Error! No save file found at " + brushFilePath);
-            return null;
+            if (File.Exists(brushFilePath))
+            {
+                //if the brush file exists at the given path, parse the json in that file from string to a new BrushData object
+                string brushDataJson = File.ReadAllText(brushFilePath);
+                BrushData loadedBrushData = JsonUtility.FromJson<BrushData>(brushDataJson);
+
+                loadedBrushDataObjects.Add(loadedBrushData);
+            }
+            else
+            {
+                //error message
+                Debug.LogError("Error! No save file found at " + brushFilePath);
+                return null;
+            }
         }
+        return loadedBrushDataObjects;
     }
 }

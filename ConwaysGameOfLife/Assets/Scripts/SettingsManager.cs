@@ -181,8 +181,11 @@ public class SettingsManager : MonoBehaviour
 
     public void OnClickImportButton()
     {
-        BrushData newBrushData = SaveLoadManager.LoadBrushFromFileExplorer(true);
-        gameManager.brushManager.ImportBrush(newBrushData, true);
+        List<BrushData> newBrushDataObjects = SaveLoadManager.LoadBrushesFromFileExplorer(true);
+        foreach (BrushData newBrushData in newBrushDataObjects)
+        {
+            gameManager.brushManager.ImportBrush(newBrushData, true);
+        }
     }
 
     /*

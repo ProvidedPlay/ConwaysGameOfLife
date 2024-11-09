@@ -22,6 +22,12 @@ public static class FileExplorerHelper
         string createdFilePath = StandaloneFileBrowser.SaveFilePanel("Save Brush File", saveFileDirectory, "Brush", "json");
         return createdFilePath;
     }
+    public static string[] ImportBrushes(string saveFileDirectory)//returns an array of filepaths for custom brushes
+    {
+        ExtensionFilter[] extentionsToFilterFor = new[] { new ExtensionFilter("json") };
+        string[] selectedFilePaths = StandaloneFileBrowser.OpenFilePanel("Import Brush(es)", saveFileDirectory, extentionsToFilterFor, true);
+        return selectedFilePaths;
+    }
     public static string ExtractFileNameFromFilepath(string fileName)
     {
         return Path.GetFileNameWithoutExtension(fileName);

@@ -81,6 +81,7 @@ public class BrushManager : MonoBehaviour
     public void InitializeBrushManager()
     {
         SelectBrushType(defaultBrushIndex, true);
+        ImportAllBrushesFromDirectory(true);
     }
     public void ToggleBrushCursor(bool cursorActive)
     {
@@ -272,6 +273,14 @@ public class BrushManager : MonoBehaviour
         if(isCustomBrush)
         {
             AddBrushToCustomBrushes(brushData);
+        }
+    }
+    public void ImportAllBrushesFromDirectory(bool loadCustomBrushes)
+    {
+        List<BrushData> newBrushDataObjects = SaveLoadManager.LoadAllBrushesFromDirectory(loadCustomBrushes);
+        foreach (BrushData newBrushData in newBrushDataObjects)
+        {
+            gameManager.brushManager.ImportBrush(newBrushData, loadCustomBrushes);
         }
     }
 }
