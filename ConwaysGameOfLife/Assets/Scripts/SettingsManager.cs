@@ -179,6 +179,12 @@ public class SettingsManager : MonoBehaviour
         gameManager.brushManager.ToggleSelectionCursor(true);
     }
 
+    public void OnClickImportButton()
+    {
+        BrushData newBrushData = SaveLoadManager.LoadBrushFromFileExplorer(true);
+        gameManager.brushManager.ImportBrush(newBrushData, true);
+    }
+
     /*
      * Advanced Settings Menu Buttons
      */

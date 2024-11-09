@@ -32,7 +32,6 @@ public static class SettingsHelper
                 selectedLivingCells.Add(new (tilePosition.x, tilePosition.y, tilePosition.z));
             }
         }
-        Debug.Log(selectedLivingCells.Count);
         Vector3Int brushCenter = Vector3Int.FloorToInt(selectionBounds.center);
 
         return new BrushData(brushName, false, selectedLivingCells, brushCenter);

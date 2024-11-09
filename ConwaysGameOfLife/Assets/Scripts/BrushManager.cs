@@ -241,7 +241,10 @@ public class BrushManager : MonoBehaviour
     {
         customBrushDataObjects.Add(brushData);
         SettingsHelper.AddCustomBrushDropdownMenuItem(brushData.brushName, gameManager.settingsManager);
-
+    }
+    public void AddBrushToPresetBrushes(BrushData brushData)
+    {
+        //add code here
     }
     public BrushData GenerateAndSaveBrush(bool isCustomBrush)
     {
@@ -262,6 +265,13 @@ public class BrushManager : MonoBehaviour
         else
         {
             return null;
+        }
+    }
+    public void ImportBrush(BrushData brushData, bool isCustomBrush)
+    {
+        if(isCustomBrush)
+        {
+            AddBrushToCustomBrushes(brushData);
         }
     }
 }

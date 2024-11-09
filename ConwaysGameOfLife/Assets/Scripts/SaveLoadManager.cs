@@ -71,4 +71,24 @@ public static class SaveLoadManager
         //create save file at specified path with specified save file name
         File.WriteAllText(brushSaveFilePath, levelDataJSON);
     }
+
+    public static BrushData LoadBrushFromFileExplorer(bool loadCustomBrush)
+    {
+        string brushFolderPath = loadCustomBrush ? Application.persistentDataPath + customBrushesFolderDirectory : presetBrushesFolderDirectory;
+        string brushFilePath = FileExplorerHelper.OpenFile(brushFolderPath);
+        if (File.Exists(brushFilePath))
+        {
+            //if the brush file exists at the given path, parse the json in that file from string to a new BrushData object
+            string brushDataJson = File.ReadAllText(brushFilePath);
+            BrushData loadedBrushData = JsonUtility.FromJson<BrushData>(brushDataJson);
+
+            return loadedBrushData;
+        }
+        else
+        {
+            //error message
+            Debug.LogError("Error! No save file found at " + brushFilePath);
+            return null;
+        }
+    }
 }
