@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Xml.Schema;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Tilemaps;
 
 [ExecuteInEditMode]
@@ -55,7 +56,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetAxisRaw("Mouse ScrollWheel") != 0)
+        if(Input.GetAxisRaw("Mouse ScrollWheel") != 0 && !EventSystem.current.IsPointerOverGameObject())
         {
             ZoomCamera(Input.GetAxis("Mouse ScrollWheel"), true);
         }
