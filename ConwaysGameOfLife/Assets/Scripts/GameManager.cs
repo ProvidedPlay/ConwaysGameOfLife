@@ -173,9 +173,12 @@ public class GameManager : MonoBehaviour
     public void GameLoad(LevelData levelData)
     {
         StopAllCoroutines();
-        TileMapGenerationHelper.UpdateTileMapHeight(tileMapManager, levelData.tileMapHeight);
+        if (levelData != null){ TileMapGenerationHelper.UpdateTileMapHeight(tileMapManager, levelData.tileMapHeight); }
         SetUpGameBoard();
-        ImportLivingCells(levelData.livingCells);
+        if (levelData != null) 
+        {
+            ImportLivingCells(levelData.livingCells);
+        }
         StartCoroutine(GameLoop());
 
     }

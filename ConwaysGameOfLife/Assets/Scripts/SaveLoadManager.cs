@@ -18,6 +18,11 @@ public static class SaveLoadManager
         }
         //create a save file path via an explorer window, your save file will be written to this path later
         string saveFilePath = FileExplorerHelper.SaveFile(saveFolderPath);
+        //if the above function doesnt produce a path (aka the player cancelled the save operation and returned an empty string), cancel the cave operation
+        if (!File.Exists(saveFilePath)) 
+        {
+            return;
+        }
 
         //create a save game object of class LevelData, turn it into a JSON string
         LevelData levelDataObject = new LevelData(gameManager);
@@ -42,7 +47,7 @@ public static class SaveLoadManager
         else
         {
             //error message
-            Debug.LogError("Error! No save file found at " + saveFilePath);
+            Debug.Log("Error! No save file found at " + saveFilePath);
             return null;
         }
     }

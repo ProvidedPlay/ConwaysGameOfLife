@@ -141,7 +141,10 @@ public class SettingsManager : MonoBehaviour
     public void OnClickLoadGame()
     {
         LevelData newLevelData = SaveLoadManager.LoadLevel();
-        gameManager.GameLoad(newLevelData);
+        if (newLevelData != null)
+        {
+            gameManager.GameLoad(newLevelData);
+        }
     }
     /*
      * Button Logic (Brush Menu)
