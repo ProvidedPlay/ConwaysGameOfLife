@@ -160,18 +160,22 @@ public class SettingsManager : MonoBehaviour
 
     public void SelectPresetBrushesDropdownItem()
     {
-        if (presetBrushesDropdown != null)
+        if (presetBrushesDropdown != null && presetBrushesDropdown.value != -1)//only run if the dropdown isnt being cleared (aka value changed to -1)
         {
             int dropdownIndex = presetBrushesDropdown.value;
             gameManager.brushManager.SelectBrushType(dropdownIndex, true);
+
+            customBrushesDropdown.value = -1; //This clears the custom brush dropdown's active selection 
         }
     }
     public void SelectCustomBrushesDropdownItem()
     {
-        if (customBrushesDropdown != null)
+        if (customBrushesDropdown != null && customBrushesDropdown.value != -1)
         {
             int dropdownIndex = customBrushesDropdown.value;
             gameManager.brushManager.SelectBrushType(dropdownIndex, false);
+
+            presetBrushesDropdown.value = -1;
         }
     }
     public void OnClickCopyButton()

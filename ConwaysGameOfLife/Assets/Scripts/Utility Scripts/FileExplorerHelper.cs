@@ -10,7 +10,7 @@ public static class FileExplorerHelper
     {
         ExtensionFilter[] extentionsToFilterFor = new[] { new ExtensionFilter("json") };
         string[] selectedFilePath = StandaloneFileBrowser.OpenFilePanel("Load Map File", saveFileDirectory, extentionsToFilterFor, false);
-        return selectedFilePath[0];
+        return selectedFilePath.Length > 0 ? selectedFilePath[0] : null;
     }
     public static string SaveFile(string saveFileDirectory)
     {
