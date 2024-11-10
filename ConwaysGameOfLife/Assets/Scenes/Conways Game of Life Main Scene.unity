@@ -3884,7 +3884,8 @@ MonoBehaviour:
   selectionCursorActive: 0
   selectionCursorIsDragging: 0
   defaultBrushIndex: 0
-  defaultCustomBrushName: Custom Brush
+  defaultQuickSaveBrushName: Quicksave Brush
+  saveQuickBrushShortcut: Debug Multiplier
   saveBrushAsPreset: 0
   selectionBoxStartPoint: {x: 0, y: 0, z: 0}
   selectionBoxEndPoint: {x: 0, y: 0, z: 0}

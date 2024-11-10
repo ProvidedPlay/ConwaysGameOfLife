@@ -20,7 +20,8 @@ public class BrushManager : MonoBehaviour
     public bool selectionCursorIsDragging;
     public int defaultBrushIndex;
 
-    public string defaultCustomBrushName;
+    public string defaultQuickSaveBrushName;
+    public string saveQuickBrushShortcut;
     public bool saveBrushAsPreset;
 
     public Vector3Int selectionBoxStartPoint;
@@ -46,7 +47,7 @@ public class BrushManager : MonoBehaviour
         }
         if(selectionCursorIsDragging && !selectionCursorActive)
         {
-            EndSelectionBoxDrag(true);
+            EndSelectionBoxDrag(true, false);
         }
         /*
         if (selectionCursorActive && selectionCursorIsDragging && selectionBoxStartPoint != Vector3Int.zero)
@@ -181,7 +182,7 @@ public class BrushManager : MonoBehaviour
             DrawSelectionBox();
         }
     }
-    public void EndSelectionBoxDrag(bool cancelSelect)
+    public void EndSelectionBoxDrag(bool cancelSelect, bool makeQuickCopy)
     {
         if (selectionCursorIsDragging)
         {
@@ -189,7 +190,7 @@ public class BrushManager : MonoBehaviour
             selectionCursorIsDragging = false;
             if (!cancelSelect)
             {
-                BrushData newBrush = GenerateAndSaveBrush(!saveBrushAsPreset);
+                BrushData newBrush = !makeQuickCopy ? GenerateAndSaveBrush(!saveBrushAsPreset) : GenerateQuickBrushCopy();
                 if (newBrush != null)
                 {
                     AddBrushToCustomBrushes(newBrush);
@@ -267,6 +268,11 @@ public class BrushManager : MonoBehaviour
         {
             return null;
         }
+    }
+    public BrushData GenerateQuickBrushCopy()
+    {
+        BrushData newQuickBrush = SettingsHelper.GenerateBrushFromSelection(selectionBoxStartPoint, selectionBoxEndPoint, defaultQuickSaveBrushName, gameManager);
+        return newQuickBrush;
     }
     public void ImportBrush(BrushData brushData, bool isCustomBrush)
     {

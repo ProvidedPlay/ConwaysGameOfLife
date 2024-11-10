@@ -290,7 +290,14 @@ public class GameManager : MonoBehaviour
                 }
                 if (Input.GetMouseButtonUp(0))
                 {
-                    brushManager.EndSelectionBoxDrag(false);
+                    if(Input.GetButton(brushManager.saveQuickBrushShortcut))
+                    {
+                        brushManager.EndSelectionBoxDrag(false, true);
+                    }
+                    else
+                    {
+                        brushManager.EndSelectionBoxDrag(false, false);
+                    }
                 }
             }
         }
