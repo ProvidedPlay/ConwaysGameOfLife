@@ -19,8 +19,9 @@ public static class SaveLoadManager
         //create a save file path via an explorer window, your save file will be written to this path later
         string saveFilePath = FileExplorerHelper.SaveFile(saveFolderPath);
         //if the above function doesnt produce a path (aka the player cancelled the save operation and returned an empty string), cancel the cave operation
-        if (!File.Exists(saveFilePath)) 
+        if (saveFilePath == "") 
         {
+            Debug.Log("File not saved" + saveFilePath);
             return;
         }
 
