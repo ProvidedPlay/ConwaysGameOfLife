@@ -360,6 +360,7 @@ public class GameManager : MonoBehaviour
         return adjacentTiles;
     }
 
+
     void ConsiderLivingCells()
     {
         foreach(var livingCell in livingCells)
@@ -387,6 +388,43 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+ 
+    /*
+    void ConsiderLivingCells()
+    {
+        foreach (var livingCell in livingCells)
+        {
+            int livingAdjacentCells = 0;
+            Vector3Int keyToConsider = new Vector3Int(0,0,0);
+            //Debug.Log("now measuring " + livingCell);
+            for (int xPosition = livingCell.Key.x-1; xPosition <= livingCell.Key.x+1; xPosition++)//pair of loops iterates through every cell above and below, left and right of the current 'livingKey', and runs the appropriate code based on the cells value
+            {
+                for (int yPosition = livingCell.Key.y - 1; yPosition <= livingCell.Key.y + 1; yPosition++)
+                {
+                    keyToConsider.Set(xPosition,  yPosition, livingCell.Key.z);//
+                    if((keyToConsider.x != livingCell.Key.x || keyToConsider.y != livingCell.Key.y) && allTiles.ContainsKey(keyToConsider))
+                    {
+                        if (allTiles[keyToConsider] == true)
+                        {
+                            livingAdjacentCells += 1;
+                        }
+                        else if (allTiles[keyToConsider] == false)//this is the second time we lookup if the value exists (first is getvalueordefault) OPTIMIZETHIS
+                        {
+                            deadCellConsiderationDict.TryGetValue(keyToConsider, out int deadCellLivingAdjacentCells);
+                            deadCellConsiderationDict[keyToConsider] = deadCellLivingAdjacentCells + 1;
+                            //Debug.Log("dead cell to consider: " + cell.Key);
+                        }
+                    }
+                }
+            }
+            if (livingAdjacentCells < 2 || livingAdjacentCells > 3)
+            {
+                MarkCellForLifeChange(livingCell.Key, false);
+                //Debug.Log("Cell marked for death: " +  livingCell.Key + "living adjacent cells: " + livingAdjacentCells);
+            }
+        }
+    }
+    */
     void ConsiderDeadCells()
     {
         foreach (var deadCell in deadCellConsiderationDict)
