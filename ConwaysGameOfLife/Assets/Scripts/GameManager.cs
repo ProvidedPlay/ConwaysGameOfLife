@@ -7,6 +7,7 @@ using UnityEngine.Tilemaps;
 using TMPro;
 using Cinemachine;
 using UnityEngine.UI;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -22,6 +23,7 @@ public class GameManager : MonoBehaviour
     public SettingsManager settingsManager;
     public BrushManager brushManager;
     public UIManager uiManager;
+    public MapComputeShaderManager mapComputeShaderManager;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
@@ -55,6 +57,7 @@ public class GameManager : MonoBehaviour
     public Dictionary<Vector3Int, bool> livingCells = new();
     public Dictionary<Vector3Int, int> deadCellConsiderationDict = new();
     public Dictionary<Vector3Int, bool> cellsMarkedForLifeChange = new();
+    public TileArrayData[] adjacentTiles = new TileArrayData[8];
 
     private void Awake()
     {
@@ -92,6 +95,7 @@ public class GameManager : MonoBehaviour
         uiManager = GameObject.FindGameObjectWithTag("UI").GetComponent<UIManager>();
         brushManager = GetComponent<BrushManager>();
         gameCamera = Camera.main;
+        mapComputeShaderManager = GetComponent<MapComputeShaderManager>();
     }
 
 
@@ -122,6 +126,9 @@ public class GameManager : MonoBehaviour
                 ColorTile(tilePosition, tileMap, offColor);
             }
             tilemapZAxisPosition = (int)tileMap.transform.position.z;
+
+            mapComputeShaderManager.GenerateMap(tileMapManager.TileMapWidth, tileMapManager.TileMapHeight);//generate map in compute shader
+            //mapComputeShaderManager.GetLivingCellsFromComputeShader();
         }
     }
     public void ClearAllTiles()
@@ -224,6 +231,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Coroutine state: game playing");
         settingsManager.UpdateGameStateText("PLAY MODE");
+        mapComputeShaderManager.GetLivingCellsFromComputeShader();
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
         brushManager.ToggleSelectionCursor(false);
@@ -344,6 +352,7 @@ public class GameManager : MonoBehaviour
             allTiles[tilePosition] = false;
         }
     }
+    /*
     public Dictionary<Vector3Int, bool> GetAdjacentTiles(Vector3Int targetCell)
     {
         Dictionary<Vector3Int, bool> adjacentTiles= new Dictionary<Vector3Int, bool>()
@@ -359,13 +368,98 @@ public class GameManager : MonoBehaviour
         };
         return adjacentTiles;
     }
+    */
+    void PopulateAdjacentTilesDict(Vector3Int targetCell)
+    {
+        {
+            adjacentTiles[0].tilePosition.Set(targetCell.x - 1, targetCell.y - 1, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x - 1, targetCell.y - 1, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[0].isActive = isActive;
+        }
 
+        {
+            adjacentTiles[1].tilePosition.Set(targetCell.x - 1, targetCell.y, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x - 1, targetCell.y, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[1].isActive = isActive;
+        }
 
+        {
+            adjacentTiles[2].tilePosition.Set(targetCell.x - 1, targetCell.y + 1, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x - 1, targetCell.y + 1, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[2].isActive = isActive;
+        }
+
+        {
+            adjacentTiles[3].tilePosition.Set(targetCell.x, targetCell.y - 1, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x, targetCell.y - 1, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[3].isActive = isActive;
+        }
+
+        {
+            adjacentTiles[4].tilePosition.Set(targetCell.x, targetCell.y + 1, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x, targetCell.y + 1, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[4].isActive = isActive;
+        }
+
+        {
+            adjacentTiles[5].tilePosition.Set(targetCell.x + 1, targetCell.y - 1, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x + 1, targetCell.y - 1, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[5].isActive = isActive;
+        }
+
+        {
+            adjacentTiles[6].tilePosition.Set(targetCell.x + 1, targetCell.y, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x + 1, targetCell.y, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[6].isActive = isActive;
+            //Debug.Log(adjacentTiles[6].tilePosition.ToString() + isActive6);
+        }
+
+        {
+            adjacentTiles[7].tilePosition.Set(targetCell.x + 1, targetCell.y + 1, tilemapZAxisPosition);
+            allTiles.TryGetValue(new Vector3Int(targetCell.x + 1, targetCell.y + 1, tilemapZAxisPosition), out bool isActive);
+            adjacentTiles[7].isActive = isActive;
+        }
+    }
+    void ClearAdjacentTilesDict()
+    {
+        
+    }
+
+    void ConsiderLivingCells()
+    {
+        foreach (var livingCell in livingCells)
+        {
+            //Dictionary<Vector3Int, bool> adjacentTiles = GetAdjacentTiles(livingCell.Key);
+            PopulateAdjacentTilesDict(livingCell.Key);
+            int livingAdjacentCells = 0;
+            //Debug.Log("now measuring " + livingCell);
+            foreach (TileArrayData adjacentTile in adjacentTiles)
+            {
+                if (adjacentTile.isActive == true)
+                {
+                    livingAdjacentCells += 1;
+                }
+                else if (adjacentTile.isActive == false && allTiles.ContainsKey(adjacentTile.tilePosition))//this is the second time we lookup if the value exists (first is getvalueordefault) OPTIMIZETHIS
+                {
+                    deadCellConsiderationDict.TryGetValue(adjacentTile.tilePosition, out int deadCellLivingAdjacentCells);
+                    deadCellConsiderationDict[adjacentTile.tilePosition] = deadCellLivingAdjacentCells + 1;
+                    //Debug.Log("dead cell to consider: " + cell.Key);
+                }
+            }
+            if (livingAdjacentCells < 2 || livingAdjacentCells > 3)
+            {
+                MarkCellForLifeChange(livingCell.Key, false);
+                //Debug.Log("Cell marked for death: " +  livingCell.Key + "living adjacent cells: " + livingAdjacentCells);
+            }
+        }
+    }
+
+    /*
     void ConsiderLivingCells()
     {
         foreach(var livingCell in livingCells)
         {
-            Dictionary<Vector3Int, bool> adjacentTiles = GetAdjacentTiles(livingCell.Key);
+            //Dictionary<Vector3Int, bool> adjacentTiles = GetAdjacentTiles(livingCell.Key);
             int livingAdjacentCells = 0;
             //Debug.Log("now measuring " + livingCell);
             foreach (var cell in adjacentTiles)
@@ -388,7 +482,8 @@ public class GameManager : MonoBehaviour
             }
         }
     }
- 
+    */
+
     /*
     void ConsiderLivingCells()
     {

@@ -4652,6 +4652,7 @@ GameObject:
   - component: {fileID: 379804044}
   - component: {fileID: 379804043}
   - component: {fileID: 379804045}
+  - component: {fileID: 379804046}
   m_Layer: 0
   m_Name: Game Manager
   m_TagString: GameController
@@ -4695,6 +4696,23 @@ MonoBehaviour:
   maximumTickIntervalTime: 0.5
   tickIntervalTime: 0.03125
   gameSpeedFactor: 5
+  adjacentTiles:
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
+  - tilePosition: {x: 0, y: 0, z: 0}
+    isActive: 0
 --- !u!4 &379804042
 Transform:
   m_ObjectHideFlags: 0
@@ -4918,6 +4936,20 @@ MonoBehaviour:
     - {x: 4, y: 4, z: 0}
     brushCenter: {x: 2, y: 2, z: 0}
   customBrushDataObjects: []
+--- !u!114 &379804046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 379804040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 732ee2f03815d844d96a53ed5e0039fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mapComputeShader: {fileID: 7200000, guid: bc556a7259d0f05428d212c4a062b37b, type: 3}
+  mapRenderTexture: {fileID: 0}
 --- !u!1 &381811127
 GameObject:
   m_ObjectHideFlags: 0

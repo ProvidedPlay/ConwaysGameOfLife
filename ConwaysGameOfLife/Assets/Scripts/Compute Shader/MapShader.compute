@@ -1,0 +1,28 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel InitializeGameBoard
+#pragma kernel UpdateGameBoard
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> AllCellsGrid;
+
+//Kernel #1, InitializeGameBoard
+[numthreads(8,8,1)]
+void InitializeGameBoard(uint3 id : SV_DispatchThreadID) //For each pixel in the 2d texture AllCellsGrid (each value of x,y), sets the value of the cell to 0 (aka dead)
+{
+    uint2 cellCoordinates = id.xy;
+    float4 color = AllCellsGrid[cellCoordinates];
+    
+    //set all cells as dead;
+    AllCellsGrid[cellCoordinates] = float4(255, 0, 0, 0); //the value of the cell at coordinate 'x,y' is 0
+}
+
+//Kernel #2 UpdateGameBoard
+[numthreads(8,8,1)]
+void UpdateGameBoard(uint3 id : SV_DispatchThreadID)
+{
+    //CODE HERE
+    uint2 cellCoordinates = id.xy;
+    AllCellsGrid[cellCoordinates] = float4(0, 0, 0, 0); //the value of the cell at coordinate 'x,y' is 0
+
+}
