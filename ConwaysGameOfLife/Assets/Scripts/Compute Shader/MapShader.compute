@@ -1,28 +1,79 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel InitializeGameBoard
 #pragma kernel UpdateGameBoard
+#pragma kernel LoadLivingCellsFromCPU
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
-RWTexture2D<float4> AllCellsGrid;
+//RWTexture2D<float4> AllCellsGrid;
+//RWTexture2D<float> AllCellsGrid;
+RWStructuredBuffer<uint> AllCellsBuffer; // stores the whole game board as a 1 dimensional buffer
+StructuredBuffer<int2> LivingCellsBuffer;
 
-//Kernel #1, InitializeGameBoard
-[numthreads(8,8,1)]
+uint gameBoardWidth;
+uint gameBoardHeight;
+
+int numLivingCells;
+
+//Kernel #0, InitializeGameBoard
+[numthreads(16,16,1)]
 void InitializeGameBoard(uint3 id : SV_DispatchThreadID) //For each pixel in the 2d texture AllCellsGrid (each value of x,y), sets the value of the cell to 0 (aka dead)
 {
-    uint2 cellCoordinates = id.xy;
-    float4 color = AllCellsGrid[cellCoordinates];
+    uint x = id.x;
+    uint y = id.y;
+    if (x >= gameBoardWidth || y >= gameBoardHeight)//this makes sure that the compute shader doesnt go out of bounds, this is because the last batch of threads may have more threads (ie more x's and y's) than the board has cells.
+    {
+        return;
+    }
     
-    //set all cells as dead;
-    AllCellsGrid[cellCoordinates] = float4(255, 0, 0, 0); //the value of the cell at coordinate 'x,y' is 0
+    int cellIndex = y * gameBoardWidth + x; // flattens two dimensions into a single dimensional cellIndex. Every y value is the y*width's cell number (eg if it has a width of 11, the bottom left corner would be (0*11=0 +1) 1 in the index. The next line up where x=1 will be (1*11=11)+1 the 12th cell. 
+    
+    //read the current cellstate
+    //uint cellstate = AllCellsBuffer[cellIndex];
+    
+    AllCellsBuffer[cellIndex] = 0;
 }
 
-//Kernel #2 UpdateGameBoard
-[numthreads(8,8,1)]
+//Kernel #1 UpdateGameBoard
+[numthreads(16,16,1)]
 void UpdateGameBoard(uint3 id : SV_DispatchThreadID)
 {
-    //CODE HERE
-    uint2 cellCoordinates = id.xy;
-    AllCellsGrid[cellCoordinates] = float4(0, 0, 0, 0); //the value of the cell at coordinate 'x,y' is 0
-
+    uint x = id.x;
+    uint y = id.y;
+    if (x >= gameBoardWidth || y >= gameBoardHeight)//this makes sure that the compute shader doesnt go out of bounds, this is because the last batch of threads may have more threads (ie more x's and y's) than the board has cells.
+    {
+        return;
+    }
+    
+    int cellIndex = y * gameBoardWidth + x;
+    
+     //read the current cellstate
+    uint cellstate = AllCellsBuffer[cellIndex];
+    
+    //Run GOL Code Here
+    
+    //Temporary randomize code to start
+    //AllCellsBuffer[cellIndex] = (cellIndex + 1.0) % 2.0;
+    
+}
+//Kernel #1 LoadLivingCellsFromCPU
+[numthreads(256, 1, 1)]
+void LoadLivingCellsFromCPU(uint3 id : SV_DispatchThreadID)
+{
+    int i = id.x; 
+    if (i >= numLivingCells)
+    {
+        return;
+    }
+    
+    //retrieve the x,y position of the living cell
+    int2 livingCellPosition = LivingCellsBuffer[i]; // Even though the data in LivingCellsBuffer was copied from a single dimensional array "livingCellsData[]" (where each even value was the x value and each consecutive odd value is a y value), since LivingCellsBuffer is an <int2> it automatically combines consecutive values its given to be the 'x' and 'y' values of a single int2 respectively, this recombining the 1d array into a 2d array automatically
+    
+    //flatten the (x,y) position to a 1d index holding both values for each indexed output value, this will be a 1 to 1 relation to the corresponding cell in our AllCellsBuffer
+    int livingCellIndex = livingCellPosition.y * gameBoardWidth + livingCellPosition.x;
+    
+    //Set that cell as alive in AllCellsBuffer
+    AllCellsBuffer[livingCellIndex] = 1;
+    
+    
 }

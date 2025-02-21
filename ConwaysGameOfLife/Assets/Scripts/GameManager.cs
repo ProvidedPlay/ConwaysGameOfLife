@@ -128,7 +128,6 @@ public class GameManager : MonoBehaviour
             tilemapZAxisPosition = (int)tileMap.transform.position.z;
 
             mapComputeShaderManager.GenerateMap(tileMapManager.TileMapWidth, tileMapManager.TileMapHeight);//generate map in compute shader
-            //mapComputeShaderManager.GetLivingCellsFromComputeShader();
         }
     }
     public void ClearAllTiles()
@@ -231,7 +230,8 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Coroutine state: game playing");
         settingsManager.UpdateGameStateText("PLAY MODE");
-        mapComputeShaderManager.GetLivingCellsFromComputeShader();
+        mapComputeShaderManager.GiveLivingCellsToComputeShader(livingCells);
+        mapComputeShaderManager.TickConwaysGameOfLifeOnComputeShader();
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
         brushManager.ToggleSelectionCursor(false);
