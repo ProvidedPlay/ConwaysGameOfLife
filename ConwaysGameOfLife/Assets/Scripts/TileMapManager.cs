@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 [ExecuteInEditMode]
 public class TileMapManager : MonoBehaviour
@@ -8,6 +9,7 @@ public class TileMapManager : MonoBehaviour
     public CameraToGameBoardResizer cameraResizer;
     public GameManager gameManager;
     public BoxCollider2D gameBorderBox;
+    public TilemapRenderer tilemapRenderer;
 
     [SerializeField]//shows this in inspector
     //Check out this link for a refresher on why/how I did this: https://sj-jason-liu.medium.com/properties-c-skill-in-unity-4-adedd3959dc0#:~:text=To%20set%20a%20property%2C%20first,user%20can%20change%20the%20value.
@@ -64,6 +66,7 @@ public class TileMapManager : MonoBehaviour
         cameraResizer = GetComponent<CameraToGameBoardResizer>();
         gameManager = GetComponent<GameManager>();
         gameBorderBox = GameObject.FindGameObjectWithTag("Game Bounds").GetComponent<BoxCollider2D>();
+        tilemapRenderer = gameManager.tileMap.GetComponent<TilemapRenderer>();
     }
 
     void UpdateTileMapBounds(int width, int height)
@@ -77,5 +80,16 @@ public class TileMapManager : MonoBehaviour
     {
         gameBorderBox.offset = new ((float)tileMapBounds.xMax/2 +(cameraGameBoundsLeeway/2), (float)tileMapBounds.yMax/2 + (cameraGameBoundsLeeway/2));
         gameBorderBox.size = new((float)tileMapBounds.xMax + cameraGameBoundsLeeway, (float)tileMapBounds.yMax + cameraGameBoundsLeeway);
+    }
+    public void ToggleHideTilemap(bool hide)
+    {
+        if (hide)
+        {
+            tilemapRenderer.enabled = false;
+        }
+        else
+        {
+            tilemapRenderer.enabled = true;
+        }
     }
 }

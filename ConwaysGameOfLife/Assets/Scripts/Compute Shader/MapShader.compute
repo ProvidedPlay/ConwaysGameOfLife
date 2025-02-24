@@ -11,7 +11,7 @@ struct ChangedCellData
 };
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
-//RWTexture2D<float4> AllCellsGrid;
+RWTexture2D<float4> MapRenderTexture;
 //RWTexture2D<float> AllCellsGrid;
 RWStructuredBuffer<uint> AllCellsBufferCPUSnapshot; // stores a snapshot of the game board (when the play button was last hit) as a 1 dimensional buffer, 
 RWStructuredBuffer<uint> AllCellsBufferCurrent; // stores the current game board as a 1 dimensional buffer, 
@@ -23,8 +23,6 @@ uint gameBoardWidth;
 uint gameBoardHeight;
 
 int numLivingCells;
-
-
 
 uint GetLivingNeighborCount(uint x, uint y)
 {
@@ -72,6 +70,18 @@ void InitializeGameBoard(uint3 id : SV_DispatchThreadID) //For each pixel in the
     
     AllCellsBufferCPUSnapshot[cellIndex] = 0;
     AllCellsBufferCurrent[cellIndex] = 0;
+    
+    if (id.x == 0 && id.y == 0)//Only one thread needs to do this
+    {
+        ChangedCellsCountBuffer[0] = 0;
+    }
+    //LivingCellsBuffer[cellIndex] = 0;
+    
+    //Initialize the renderTexture as a clear board
+    float4 cellColor = float4(0, 0, 0, 1);
+    
+    MapRenderTexture[id.xy] = cellColor;
+
 }
 
 //Kernel #1 UpdateGameBoard
@@ -110,7 +120,10 @@ void UpdateGameBoard(uint3 id : SV_DispatchThreadID)
             AllCellsBufferCurrent[cellIndex] = 1; // Cell becomes alive
         }
     }
+    //update the rendertexture with the cell's new colour, white if dead, black if alive ( TODO change this to custom colours once implemented and working)!!!!
+    float4 cellColor = cellState == 1? float4(255, 255, 255, 255) : float4(0,0,0,1);
     
+    MapRenderTexture[id.xy] = cellColor;
 }
 //Kernel #1 LoadLivingCellsFromCPU
 [numthreads(256, 1, 1)]

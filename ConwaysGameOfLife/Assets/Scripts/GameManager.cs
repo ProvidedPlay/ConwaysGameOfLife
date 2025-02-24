@@ -210,6 +210,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Coroutine state: game setup");
         settingsManager.UpdateGameStateText("EDIT MODE");
+        tileMapManager.ToggleHideTilemap(false);
         ToggleOverlayGrid(CheckIfToggleGridOnByDefault());
         brushManager.ToggleBrushCursor(true);
         while (!proceedToNextGameState)
@@ -231,6 +232,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("Coroutine state: game playing");
         settingsManager.UpdateGameStateText("PLAY MODE");
         mapComputeShaderManager.GiveLivingCellsToComputeShader(livingCells);
+        tileMapManager.ToggleHideTilemap(true);
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
         brushManager.ToggleSelectionCursor(false);
@@ -243,7 +245,9 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(tickIntervalTime);
         }
         Debug.Log("exited game playing");
-        mapComputeShaderManager.GetChangedCellsDataFromComputeShader();
+        //mapComputeShaderManager.GetChangedCellsDataFromComputeShader();
+        UpdateBoardStateFromComputeShader();
+
         yield return new WaitForEndOfFrame();
         proceedToNextGameState = false;
     }
@@ -547,12 +551,21 @@ public class GameManager : MonoBehaviour
         cellsMarkedForLifeChange.Clear();
     }
 
+    void UpdateBoardStateFromComputeShader()
+    {
+        Cell[] changedCellsSinceLastRoundStarted = mapComputeShaderManager.GetChangedCellsDataFromComputeShader();
+        foreach (var cell in changedCellsSinceLastRoundStarted)
+        {
+            KillOrBirthCell(new Vector3Int(cell.cellPosition.x, cell.cellPosition.y, 0), cell.cellValue == 1 ? true : false);
+        }
+
+    }
     void RunCellLifeCycleLoop()
     {
         mapComputeShaderManager.TickConwaysGameOfLifeOnComputeShader();
-        ConsiderLivingCells();
-        ConsiderDeadCells();
-        UpdateCellLifeCycle();
+        //ConsiderLivingCells();
+        //ConsiderDeadCells();
+        //UpdateCellLifeCycle();
     }
     /*
      * Show/Hide overlay grid

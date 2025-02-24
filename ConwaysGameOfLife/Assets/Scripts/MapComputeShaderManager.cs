@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Tilemaps;
 
 
 public struct Cell // this, specifically, will store data about changed cells and their values
@@ -12,9 +14,14 @@ public struct Cell // this, specifically, will store data about changed cells an
 }
 public class MapComputeShaderManager : MonoBehaviour
 {
+    public GameManager gameManager;
+
+    public RenderTexture mapRenderTexture; //note, this renderTexture is used for compute purposes only, not to actually render the board. Thats because the game board is resizeable and this texture maps one cell to exactly one pixel for compute purposes
+    public GameObject gameOfLifeDisplayBoard;
+    public Renderer gameBoardRenderer;
+    public Tilemap gameBoardTilemap;
 
     public ComputeShader mapComputeShader;
-    //public RenderTexture mapRenderTexture; //note, this renderTexture is used for compute purposes only, not to actually render the board. Thats because the game board is resizeable and this texture maps one cell to exactly one pixel for compute purposes
     public ComputeBuffer allCellsBufferCPUSnapshot;
     public ComputeBuffer allCellsBufferCurrent;
     public ComputeBuffer changedCellsBuffer;
@@ -45,31 +52,47 @@ public class MapComputeShaderManager : MonoBehaviour
         kernelIndexForUpdateGameBoard = mapComputeShader.FindKernel("UpdateGameBoard");
         kernelIndexForLoadLivingCellsFromCPU = mapComputeShader.FindKernel("LoadLivingCellsFromCPU");
         kernelIndexForCompareCurrentCellsBufferToCPUSnapshot = mapComputeShader.FindKernel("CompareCurrentCellsBufferToCPUSnapshot");
+
+        gameOfLifeDisplayBoard = GameObject.FindGameObjectWithTag("GraphicsQuad");
+        if(gameManager == null)
+        {
+            gameManager = GetComponent<GameManager>();
+        }
+        gameBoardTilemap = gameManager.tileMap;
+
     }
 
-     
-    public void GenerateMapRenderTexture(int width, int height)
+    public void CreateMapRenderTexture()
     {
-        //Create a RenderTexture Grid of the appropriate Size
-       // mapRenderTexture = new RenderTexture(width, height, 1, RenderTextureFormat.R8); //rendertextureformat.r8 stores the texture in the form of an 8-bit integer (max 256 values), which is fine because we're only using 0 and 1 for if the cell is alive or dead
-       // mapRenderTexture.enableRandomWrite = true;
-        //mapRenderTexture.Create();
-
-        /*
-        //Initialize Cell Value Data to be used in the Grid
-        uint[] initialCellData = new uint[width * height];
-        for (int i = 0; i < width * height; i++)
+        if (mapRenderTexture != null)
         {
-            initialCellData[i] = 0; //Alive = 1, Dead = 0
+            mapRenderTexture.Release();//if it already exists, destroy it
         }
-        */
+        // Create the render texture that the compute shader will display the grid on
+        mapRenderTexture = new RenderTexture(mapWidth, mapHeight, 0, RenderTextureFormat.ARGB32);
+        mapRenderTexture.enableRandomWrite = true;
+        mapRenderTexture.filterMode = FilterMode.Point;//pixel perfect
+        mapRenderTexture.wrapMode = TextureWrapMode.Clamp;//dont repeat the texture
+        mapRenderTexture.Create();
 
-        //Set this rendertexture to be the compute shader's AllCellsGrid; the texture must be individually bound to all kernels; note: upon binding, all changes to AllCellsGrid in the compute shader will also be made on the mapRenderTexture too
-        //mapComputeShader.SetTexture(kernelIndexForInitializeGameBoard, "AllCellsGrid", mapRenderTexture);
-        //mapComputeShader.SetTexture(kernelIndexForUpdateGameBoard, "AllCellsGrid", mapRenderTexture);
+        if (gameBoardRenderer != null)
+        {
+            gameBoardRenderer.material.mainTexture = mapRenderTexture;
+        }
+    }
 
-        //run the method of the compute shader called "InitializeGameBoard"
-        //mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(width / 8.0f), Mathf.CeilToInt(height / 8.0f), 1);//Mathf.CeilToInt(f) returns the smallest int greater than or equal to f. So if height is 10 ,then 10/8f= 1.25, this returns 2. Why use this? Because it rounds UP instead of DOWN, that way theres always a thread batch calculating the stragglers if there are more cells than the nearest perfect group of 8x8. (otherwise the remainder cells wont be calculated)
+    public void FitGameBoardGraphicsQuadToMatchTilemap()
+    {
+        if (gameOfLifeDisplayBoard != null)
+        {
+            Vector3 tileSize = gameBoardTilemap.cellSize;
+            
+            float displayBoardWidth = mapWidth * tileSize.x;
+            float displayBoardHeight = mapHeight * tileSize.y;
+
+            gameOfLifeDisplayBoard.transform.localScale = new Vector3(displayBoardWidth, displayBoardHeight, 1f); //change size to match tilemap
+            gameOfLifeDisplayBoard.transform.position = new Vector3(displayBoardWidth * 0.5f, displayBoardHeight * 0.5f, 0);
+        }
     }
 
     public void GenerateMap(int width, int height)
@@ -81,7 +104,7 @@ public class MapComputeShaderManager : MonoBehaviour
 
         allCellsData = new uint[totalCellsInMap];
 
-        //Create a computebuffer to store all cells
+        //Create computebuffers to store cell data
         allCellsBufferCPUSnapshot = new ComputeBuffer(totalCellsInMap, sizeof(uint));  //Creates a new Compute buffer for use by a compute shader
                                                                                              //Structure: ComputeBuffer(int <count>, int<stride>)
                                                                                              //Parameters:
@@ -96,15 +119,21 @@ public class MapComputeShaderManager : MonoBehaviour
         changedCellsCountBuffer = new ComputeBuffer(1, sizeof(uint), ComputeBufferType.Raw); //ComputeBufferType.raw stores a typeless R32 value (32 bit)
         livingCellsBuffer = new ComputeBuffer(totalCellsInMap, sizeof(int) * 2, ComputeBufferType.Structured);//set a livingCellsBuffer to the size of the total cells in the map, since that will be its max size
 
+        //Create the render texture that the compute shader will display the grid on
+        CreateMapRenderTexture();
 
         //Set Compute Shader Values
         mapComputeShader.SetInt("gameBoardWidth", mapWidth);
         mapComputeShader.SetInt("gameBoardHeight", mapHeight);
+
+        //Align the Game Board Renderer Quad to the transform of the tilemap
+        FitGameBoardGraphicsQuadToMatchTilemap();
         
         //Set Compute Shader Buffer for each kernel that uses it
         mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
         mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBufferCurrent", allCellsBufferCurrent);
         mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "LivingCellsBuffer", livingCellsBuffer);
+        mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "ChangedCellsCountBuffer", changedCellsCountBuffer);
 
         mapComputeShader.SetBuffer(kernelIndexForUpdateGameBoard, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
         mapComputeShader.SetBuffer(kernelIndexForUpdateGameBoard, "AllCellsBufferCurrent", allCellsBufferCurrent);
@@ -120,8 +149,15 @@ public class MapComputeShaderManager : MonoBehaviour
         mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "AllCellsBufferCurrent", allCellsBufferCurrent);
         mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "ChangedCellsBuffer", changedCellsBuffer);
 
+        //Pass the renderTexture to the Compute shader
+        mapComputeShader.SetTexture(kernelIndexForInitializeGameBoard, "MapRenderTexture", mapRenderTexture);
+        mapComputeShader.SetTexture(kernelIndexForUpdateGameBoard, "MapRenderTexture", mapRenderTexture);
+        
         //Dispatch the InitializeGameBoard kernel
         mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);//Mathf.CeilToInt(f) returns the smallest int greater than or equal to f. So if height is 10 ,then 10/8f= 1.25, this returns 2. Why use this? Because it rounds UP instead of DOWN, that way theres always a thread batch calculating the stragglers if there are more cells than the nearest perfect group of 8x8. (otherwise the remainder cells wont be calculated))
+
+        //Set Up the GOL Map Quad
+
 
         Debug.Log("uint 2 size " + sizeof(int) + "int size: " + sizeof(uint));
     }
@@ -131,7 +167,7 @@ public class MapComputeShaderManager : MonoBehaviour
         //tick GOL once
         mapComputeShader.Dispatch(kernelIndexForUpdateGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
     }
-    public void GetChangedCellsDataFromComputeShader()
+    public Cell[] GetChangedCellsDataFromComputeShader()
     {
         // Reset change count buffer
         uint[] resetCounter = new uint[1] { 0 };
@@ -151,6 +187,12 @@ public class MapComputeShaderManager : MonoBehaviour
         changedCellsBuffer.GetData(changedCellsData);
         //RequestGOLDataFromComputeShader();            TODO get this code to work asynchronously to avoid delays
         ProcessChangedCellsFromComputeShader();
+
+        //clear changedCellsBuffer
+        Cell[] emptyCellBuffer = new Cell[0];
+        changedCellsBuffer.SetData(emptyCellBuffer);
+
+        return changedCellsData;
     }
     public void RequestGOLDataFromComputeShader()
     {
@@ -205,12 +247,16 @@ public class MapComputeShaderManager : MonoBehaviour
                     netCellsKilled++;
                 }
             }
+        
+
 
         Debug.Log("All cells: " + allCellsData.Length+ ".   Net Cells Birthed: " + netCellsBirthed + "      .Net Cells Killed: " + netCellsKilled);
     }
 
     public void GiveLivingCellsToComputeShader(Dictionary<Vector3Int, bool> livingCells)
     {
+        mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
+
         if (livingCells.Count > totalCellsInMap)
         {
             Debug.Log("Warning, too many living cells! Increase buffer size!");
@@ -232,7 +278,6 @@ public class MapComputeShaderManager : MonoBehaviour
 
         //First, dispatch the InitializeGameBoard dispatch to clear the game board (not expensive on GPU ever), then dispatch the compute shader kernel that will process the new living cells
         mapComputeShader.SetInt("numLivingCells", livingCells.Count);
-        mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
         mapComputeShader.Dispatch(kernelIndexForLoadLivingCellsFromCPU, Mathf.CeilToInt(livingCells.Count + 1 / 256.0f), 1, 1);//run this in a single thread dimension of 256 threads
     }
 
