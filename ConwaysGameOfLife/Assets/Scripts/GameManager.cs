@@ -231,7 +231,6 @@ public class GameManager : MonoBehaviour
         Debug.Log("Coroutine state: game playing");
         settingsManager.UpdateGameStateText("PLAY MODE");
         mapComputeShaderManager.GiveLivingCellsToComputeShader(livingCells);
-        mapComputeShaderManager.TickConwaysGameOfLifeOnComputeShader();
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
         brushManager.ToggleSelectionCursor(false);
@@ -244,6 +243,7 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(tickIntervalTime);
         }
         Debug.Log("exited game playing");
+        mapComputeShaderManager.GetChangedCellsDataFromComputeShader();
         yield return new WaitForEndOfFrame();
         proceedToNextGameState = false;
     }
@@ -549,6 +549,7 @@ public class GameManager : MonoBehaviour
 
     void RunCellLifeCycleLoop()
     {
+        mapComputeShaderManager.TickConwaysGameOfLifeOnComputeShader();
         ConsiderLivingCells();
         ConsiderDeadCells();
         UpdateCellLifeCycle();

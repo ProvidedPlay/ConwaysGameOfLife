@@ -2,18 +2,57 @@
 #pragma kernel InitializeGameBoard
 #pragma kernel UpdateGameBoard
 #pragma kernel LoadLivingCellsFromCPU
+#pragma kernel CompareCurrentCellsBufferToCPUSnapshot
 
+struct ChangedCellData
+{
+    int2 position;
+    int value;
+};
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 //RWTexture2D<float4> AllCellsGrid;
 //RWTexture2D<float> AllCellsGrid;
-RWStructuredBuffer<uint> AllCellsBuffer; // stores the whole game board as a 1 dimensional buffer
+RWStructuredBuffer<uint> AllCellsBufferCPUSnapshot; // stores a snapshot of the game board (when the play button was last hit) as a 1 dimensional buffer, 
+RWStructuredBuffer<uint> AllCellsBufferCurrent; // stores the current game board as a 1 dimensional buffer, 
+RWStructuredBuffer<ChangedCellData> ChangedCellsBuffer; //stores cells changed between the current CellsBuffer and the CPU Snapshot CellsBuffer, to be given back to the CPU to update; stores their x,y positions
+RWStructuredBuffer<uint> ChangedCellsCountBuffer; //a single element buffer that counts the number of changed cells in ChangedCellsBuffer
 StructuredBuffer<int2> LivingCellsBuffer;
 
 uint gameBoardWidth;
 uint gameBoardHeight;
 
 int numLivingCells;
+
+
+
+uint GetLivingNeighborCount(uint x, uint y)
+{
+    uint livingNeighborCount = 0;
+
+    // Check each neighbor (including diagonals)
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            if (i == 0 && j == 0)
+                continue; // Skip the center cell
+
+            uint neighborXAxisPosition = x + i;
+            uint neighborYAxisPosition = y + j;
+
+            // Ensure we're within bounds
+            if (neighborXAxisPosition < gameBoardWidth && neighborYAxisPosition < gameBoardHeight)//check if the cell is within bounds
+            {
+                int neighborIndex = neighborYAxisPosition * gameBoardWidth + neighborXAxisPosition;
+                uint neighborState = AllCellsBufferCurrent[neighborIndex];
+                livingNeighborCount += neighborState; // Count living neighbors
+            }
+        }
+    }
+    
+    return livingNeighborCount;
+}
 
 //Kernel #0, InitializeGameBoard
 [numthreads(16,16,1)]
@@ -31,7 +70,8 @@ void InitializeGameBoard(uint3 id : SV_DispatchThreadID) //For each pixel in the
     //read the current cellstate
     //uint cellstate = AllCellsBuffer[cellIndex];
     
-    AllCellsBuffer[cellIndex] = 0;
+    AllCellsBufferCPUSnapshot[cellIndex] = 0;
+    AllCellsBufferCurrent[cellIndex] = 0;
 }
 
 //Kernel #1 UpdateGameBoard
@@ -48,12 +88,28 @@ void UpdateGameBoard(uint3 id : SV_DispatchThreadID)
     int cellIndex = y * gameBoardWidth + x;
     
      //read the current cellstate
-    uint cellstate = AllCellsBuffer[cellIndex];
+    uint cellState = AllCellsBufferCurrent[cellIndex];
     
     //Run GOL Code Here
     
-    //Temporary randomize code to start
-    //AllCellsBuffer[cellIndex] = (cellIndex + 1.0) % 2.0;
+    uint numberOfLivingNeighbors = GetLivingNeighborCount(x, y);
+    
+    if (cellState == 1) // Cell is alive
+    {
+        // Apply the survival rule: Cell survives if it has 2 or 3 neighbors
+        if (numberOfLivingNeighbors < 2 || numberOfLivingNeighbors > 3)
+        {
+            AllCellsBufferCurrent[cellIndex] = 0; // Cell dies due to underpopulation/overpopulation
+        }
+    }
+    else // Cell is dead
+    {
+        // Apply the birth rule: Cell becomes alive if it has exactly 3 neighbors
+        if (numberOfLivingNeighbors == 3)
+        {
+            AllCellsBufferCurrent[cellIndex] = 1; // Cell becomes alive
+        }
+    }
     
 }
 //Kernel #1 LoadLivingCellsFromCPU
@@ -73,7 +129,31 @@ void LoadLivingCellsFromCPU(uint3 id : SV_DispatchThreadID)
     int livingCellIndex = livingCellPosition.y * gameBoardWidth + livingCellPosition.x;
     
     //Set that cell as alive in AllCellsBuffer
-    AllCellsBuffer[livingCellIndex] = 1;
+    AllCellsBufferCPUSnapshot[livingCellIndex] = 1;
+    AllCellsBufferCurrent[livingCellIndex] = 1;
     
     
+}
+
+[numthreads(16, 16, 1)]
+void CompareCurrentCellsBufferToCPUSnapshot(uint3 id : SV_DispatchThreadID)
+{
+    uint x = id.x;
+    uint y = id.y;
+
+    if (x >= gameBoardWidth || y >= gameBoardHeight)
+        return;
+
+    uint currentCellIndex = y * gameBoardWidth + x;
+    uint currentCellState = AllCellsBufferCurrent[currentCellIndex];
+    uint snapshottedCellState = AllCellsBufferCPUSnapshot[currentCellIndex];
+
+    // If the cell has changed, add it to ChangedCellsBuffer
+    if (currentCellState != snapshottedCellState)
+    {
+        uint newChangedCellIndex;
+        InterlockedAdd(ChangedCellsCountBuffer[0], 1, newChangedCellIndex); // Get the next available index; adds the 1 to the value of the current ChangedCellsCount (which is stored at element 0 of the ChangedCellsCountBuffer), then sets the newChangedCellIndex to that number
+        ChangedCellsBuffer[newChangedCellIndex].position = int2(x, y); // Store the changed cell's position in the ChangedCellsBuffer, at the index determined by the value of newChangedCellIndex
+        ChangedCellsBuffer[newChangedCellIndex].value = currentCellState; //store the changed cell's new state
+    }
 }

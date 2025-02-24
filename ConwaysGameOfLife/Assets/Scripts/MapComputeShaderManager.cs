@@ -1,25 +1,37 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
+
+public struct Cell // this, specifically, will store data about changed cells and their values
+{
+    public int2 cellPosition;
+    public int cellValue;
+}
 public class MapComputeShaderManager : MonoBehaviour
 {
 
     public ComputeShader mapComputeShader;
     //public RenderTexture mapRenderTexture; //note, this renderTexture is used for compute purposes only, not to actually render the board. Thats because the game board is resizeable and this texture maps one cell to exactly one pixel for compute purposes
-    public ComputeBuffer allCellsBuffer;
+    public ComputeBuffer allCellsBufferCPUSnapshot;
+    public ComputeBuffer allCellsBufferCurrent;
+    public ComputeBuffer changedCellsBuffer;
+    public ComputeBuffer changedCellsCountBuffer;
     public ComputeBuffer livingCellsBuffer;
 
     private int kernelIndexForInitializeGameBoard;
     private int kernelIndexForUpdateGameBoard;
     private int kernelIndexForLoadLivingCellsFromCPU;
+    private int kernelIndexForCompareCurrentCellsBufferToCPUSnapshot;
 
     private int totalCellsInMap;
     private int mapWidth;
     private int mapHeight;
 
     public uint[] allCellsData;
+    public Cell[] changedCellsData;
     private bool gpuUpdateRequestInProgress = false;
 
     void Awake()
@@ -32,6 +44,7 @@ public class MapComputeShaderManager : MonoBehaviour
         kernelIndexForInitializeGameBoard = mapComputeShader.FindKernel("InitializeGameBoard");
         kernelIndexForUpdateGameBoard = mapComputeShader.FindKernel("UpdateGameBoard");
         kernelIndexForLoadLivingCellsFromCPU = mapComputeShader.FindKernel("LoadLivingCellsFromCPU");
+        kernelIndexForCompareCurrentCellsBufferToCPUSnapshot = mapComputeShader.FindKernel("CompareCurrentCellsBufferToCPUSnapshot");
     }
 
      
@@ -69,7 +82,7 @@ public class MapComputeShaderManager : MonoBehaviour
         allCellsData = new uint[totalCellsInMap];
 
         //Create a computebuffer to store all cells
-        allCellsBuffer = new ComputeBuffer(totalCellsInMap, sizeof(uint));  //Creates a new Compute buffer for use by a compute shader
+        allCellsBufferCPUSnapshot = new ComputeBuffer(totalCellsInMap, sizeof(uint));  //Creates a new Compute buffer for use by a compute shader
                                                                                              //Structure: ComputeBuffer(int <count>, int<stride>)
                                                                                              //Parameters:
                                                                                              //              count: the number of elements in the buffer
@@ -78,146 +91,77 @@ public class MapComputeShaderManager : MonoBehaviour
                                                                                              //                          be a multiple of 4,
                                                                                              //                          be less than 2040,
                                                                                              //                          match the size of the buffer type in shader (can calculate this using sizeOf method)
+        allCellsBufferCurrent= new ComputeBuffer(totalCellsInMap, sizeof(uint));
+        changedCellsBuffer = new ComputeBuffer(totalCellsInMap, sizeof(int) * 3);           // This size corresponds to the size of a Cell struct (an int2 for position and an int for value)
+        changedCellsCountBuffer = new ComputeBuffer(1, sizeof(uint), ComputeBufferType.Raw); //ComputeBufferType.raw stores a typeless R32 value (32 bit)
         livingCellsBuffer = new ComputeBuffer(totalCellsInMap, sizeof(int) * 2, ComputeBufferType.Structured);//set a livingCellsBuffer to the size of the total cells in the map, since that will be its max size
+
 
         //Set Compute Shader Values
         mapComputeShader.SetInt("gameBoardWidth", mapWidth);
         mapComputeShader.SetInt("gameBoardHeight", mapHeight);
         
         //Set Compute Shader Buffer for each kernel that uses it
-        mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBuffer", allCellsBuffer);
+        mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
+        mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBufferCurrent", allCellsBufferCurrent);
         mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "LivingCellsBuffer", livingCellsBuffer);
 
-        mapComputeShader.SetBuffer(kernelIndexForUpdateGameBoard, "AllCellsBuffer", allCellsBuffer);
+        mapComputeShader.SetBuffer(kernelIndexForUpdateGameBoard, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
+        mapComputeShader.SetBuffer(kernelIndexForUpdateGameBoard, "AllCellsBufferCurrent", allCellsBufferCurrent);
         mapComputeShader.SetBuffer(kernelIndexForUpdateGameBoard, "LivingCellsBuffer", livingCellsBuffer);
+        mapComputeShader.SetBuffer(kernelIndexForUpdateGameBoard, "ChangedCellsBuffer", changedCellsBuffer);
 
-        mapComputeShader.SetBuffer(kernelIndexForLoadLivingCellsFromCPU, "AllCellsBuffer", allCellsBuffer);
+        mapComputeShader.SetBuffer(kernelIndexForLoadLivingCellsFromCPU, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
+        mapComputeShader.SetBuffer(kernelIndexForLoadLivingCellsFromCPU, "AllCellsBufferCurrent", allCellsBufferCurrent);
         mapComputeShader.SetBuffer(kernelIndexForLoadLivingCellsFromCPU, "LivingCellsBuffer", livingCellsBuffer);
+
+        mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "ChangedCellsCountBuffer", changedCellsCountBuffer);
+        mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
+        mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "AllCellsBufferCurrent", allCellsBufferCurrent);
+        mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "ChangedCellsBuffer", changedCellsBuffer);
 
         //Dispatch the InitializeGameBoard kernel
         mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);//Mathf.CeilToInt(f) returns the smallest int greater than or equal to f. So if height is 10 ,then 10/8f= 1.25, this returns 2. Why use this? Because it rounds UP instead of DOWN, that way theres always a thread batch calculating the stragglers if there are more cells than the nearest perfect group of 8x8. (otherwise the remainder cells wont be calculated))
+
+        Debug.Log("uint 2 size " + sizeof(int) + "int size: " + sizeof(uint));
     }
 
-    /*
-    public void GetLivingCellsFromComputeShader()
-    {
-        int textureWidth = mapRenderTexture.width;
-        int textureHeight = mapRenderTexture.height;
-
-        //create a CPU readable Texture2D to store data (it will exactly match the RenderTexture data)
-        Texture2D outputMapRenderTexture = new Texture2D(textureWidth, textureHeight, TextureFormat.ARGB32, false); // the bool 'false' is for the mipchain, which determines if mipmaps should be generated for the texture; "TextureFormat.R8" means the texture will be single channel (only one color channel) in an 8-bit format (uses least data since we only want the bool value of the cell aka 0/1)
-
-        //Copy GPU AllCellsGrid to the CPU-accessible outputMapRenderTexture
-        Graphics.CopyTexture(mapRenderTexture, outputMapRenderTexture);
-
-        //Read the texture's picture data in the form of an array of bytes (bytes are 8-bit, very basic data form that takes up less space than an int)
-        var rawTextureData = outputMapRenderTexture.GetRawTextureData();
-
-        //Convert the byte array into grid values (0=dead, 1=alive); add all living cells to a Vector2 list called LivingCellsList
-        List<Vector2Int> livingCellCoords = new List<Vector2Int>();
-        for (int y = 0; y < textureHeight; y++)
-        {
-            for (int x = 0; x < textureWidth; x++)
-            {
-                int cellIndex = y * textureWidth + x;
-                byte cellState = rawTextureData[cellIndex];
-
-                if (cellState == 0)
-                {
-                    livingCellCoords.Add(new Vector2Int(x, y));
-                }
-                Debug.Log(cellIndex + " : " + cellState);
-            }
-        }
-
-    }
-    public void GetLivingCellsFromComputeShader()
-    {
-        int textureWidth = mapRenderTexture.width;
-        int textureHeight = mapRenderTexture.height;
-
-        // Create a CPU-readable Texture2D
-        Texture2D outputMapRenderTexture = new Texture2D(textureWidth, textureHeight, TextureFormat.R8, false);
-
-        // Bind the RenderTexture before reading
-        RenderTexture.active = mapRenderTexture;
-        outputMapRenderTexture.ReadPixels(new Rect(0, 0, textureWidth, textureHeight), 0, 0);//reads pixels from the currently active render texture (mapRenderTexture) and writes them to a target texture (outputMapRenderTexture). The rect defines the portion of the texture being read/copied to (in this case the whole thing)
-        outputMapRenderTexture.Apply(); // Apply to store changes in CPU memory
-        RenderTexture.active = null; // Unbind the RenderTexture
-
-        // Read raw texture data as bytes
-        Color32[] rawTextureData = outputMapRenderTexture.GetPixels32();
-
-        // Convert the byte array into grid values
-        List<Vector2Int> livingCellCoords = new List<Vector2Int>();
-        for (int y = 0; y < textureHeight; y++)
-        {
-            for (int x = 0; x < textureWidth; x++)
-            {
-                int cellIndex = y * textureWidth + x;
-                Color32 cellStateColor = rawTextureData[cellIndex]; // 0 or 255
-
-                if (cellStateColor.r == 255)
-                {
-                    livingCellCoords.Add(new Vector2Int(x, y));
-                }
-                Debug.Log(cellIndex + " : " + cellStateColor);
-            }
-        }
-
-        Debug.Log(livingCellCoords.Count);
-    }
-   
-    public void GetLivingCellsFromComputeShader()
-    {
-        int textureWidth = mapRenderTexture.width;
-        int textureHeight = mapRenderTexture.height;
-
-        // Create a CPU-readable Texture2D
-        Texture2D outputMapRenderTexture = new Texture2D(textureWidth, textureHeight, TextureFormat.R8, false);
-
-        // Bind the RenderTexture before reading
-        
-        RenderTexture.active = mapRenderTexture;
-        outputMapRenderTexture.ReadPixels(new Rect(0, 0, textureWidth, textureHeight), 0, 0);//reads pixels from the currently active render texture (mapRenderTexture) and writes them to a target texture (outputMapRenderTexture). The rect defines the portion of the texture being read/copied to (in this case the whole thing)
-        outputMapRenderTexture.Apply(); // Apply to store changes in CPU memory
-        RenderTexture.active = null; // Unbind the RenderTexture
-        
-        //Graphics.CopyTexture(mapRenderTexture, outputMapRenderTexture);
-       // outputMapRenderTexture.Apply();
-        // Read raw texture data as bytes
-        byte[] rawTextureData = outputMapRenderTexture.GetRawTextureData();
-
-        // Convert the byte array into grid values
-        List<Vector2Int> livingCellCoords = new List<Vector2Int>();
-        for (int y = 0; y < textureHeight; y++)
-        {
-            for (int x = 0; x < textureWidth; x++)
-            {
-                int cellIndex = y * textureWidth + x;
-                byte cellState = rawTextureData[cellIndex]; // 0 or 255
-
-                if (cellState == 255)
-                {
-                    livingCellCoords.Add(new Vector2Int(x, y));
-                }
-                Debug.Log(cellIndex + " : " + cellState);
-            }
-        }
-
-        Debug.Log(livingCellCoords.Count);
-    }
-    */
     public void TickConwaysGameOfLifeOnComputeShader()
+    {
+        //tick GOL once
+        mapComputeShader.Dispatch(kernelIndexForUpdateGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
+    }
+    public void GetChangedCellsDataFromComputeShader()
+    {
+        // Reset change count buffer
+        uint[] resetCounter = new uint[1] { 0 };
+        changedCellsCountBuffer.SetData(resetCounter);
+
+
+        // Dispatch the compute shader
+        mapComputeShader.Dispatch(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, Mathf.CeilToInt(mapWidth / 16f), Mathf.CeilToInt(mapHeight / 16f), 1);
+
+        // Read back the count of changed cells after dispatch
+        uint[] changedCount = new uint[1];
+        changedCellsCountBuffer.GetData(changedCount);
+        int numberOfChangedCells = (int)changedCount[0];
+
+        // Prepare Cell array changedCellsData to recieve data from the compute shader's changedCellsBuffer after the async operation is complete, this is done by setting its array size to be equal to the changedCellsCount retrieved above
+        changedCellsData = new Cell[numberOfChangedCells];
+        changedCellsBuffer.GetData(changedCellsData);
+        //RequestGOLDataFromComputeShader();            TODO get this code to work asynchronously to avoid delays
+        ProcessChangedCellsFromComputeShader();
+    }
+    public void RequestGOLDataFromComputeShader()
     {
         if(!gpuUpdateRequestInProgress)
         {
-            //tick GOL once
-            mapComputeShader.Dispatch(kernelIndexForUpdateGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
+            //tick GOL once (this code has been moved)
+            //mapComputeShader.Dispatch(kernelIndexForUpdateGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
 
             // Request async readback ; this will request data on the gpu by running the OnGPUDataRecieved method asyncronously. When the data is recieved (aka request.GetData<uint>().CopyTo(cellData), that method will run, and the tilemap will be updated
             gpuUpdateRequestInProgress = true;
-            AsyncGPUReadback.Request(allCellsBuffer, OnGPUDataRecieved);
+            AsyncGPUReadback.Request(changedCellsBuffer, OnGPUDataRecieved);
         }
     }
 
@@ -230,35 +174,39 @@ public class MapComputeShaderManager : MonoBehaviour
             return;
         }
 
-        //if the request has no error, copy the data from the GPU's AllCellsBuffer to the CPUs  allCellsData[] array
-        request.GetData<uint>().CopyTo(allCellsData);
+        //if the request has no error, copy the data from the GPU's AllCellsBuffer to the CPUs  changedCellsData[] array
+        request.GetData<Cell>().CopyTo(changedCellsData);
 
         gpuUpdateRequestInProgress = false; //this line runs after the previous line is finished
 
         //allCellsData is now ready to be read by the CPU
 
         //run temporary test GetLivingCellsFromComputeShader
-        GetLivingCellsFromComputeShader();
+        ProcessChangedCellsFromComputeShader();
     }
 
-    public void GetLivingCellsFromComputeShader()
+    public void ProcessChangedCellsFromComputeShader()
     {
         //Create a temporary array of uint[] to store data from the compute shader buffer, write the data from the allCellsBuffer into the cell data uint[] to be read by the CPU
         //allCellsData = new uint[totalCellsInMap];
         //allCellsBuffer.GetData(allCellsData);
 
         
-        int livingCellsCount = 0;
-        for (int i = 0; i < allCellsData.Length; i++)
+        int netCellsBirthed = 0;
+        int netCellsKilled = 0;
+        for (int i = 0; i < changedCellsData.Length; i++)
         {
-            if (allCellsData[i] == 1)
+            if (changedCellsData[i].cellValue == 1)
             {
-                livingCellsCount++;
+                netCellsBirthed++;
             }
-        }
+            if (changedCellsData[i].cellValue == 0)
+                {
+                    netCellsKilled++;
+                }
+            }
 
-        Debug.Log("All cells: " + allCellsData.Length);
-        Debug.Log("Living cells: " + livingCellsCount);
+        Debug.Log("All cells: " + allCellsData.Length+ ".   Net Cells Birthed: " + netCellsBirthed + "      .Net Cells Killed: " + netCellsKilled);
     }
 
     public void GiveLivingCellsToComputeShader(Dictionary<Vector3Int, bool> livingCells)
@@ -292,9 +240,24 @@ public class MapComputeShaderManager : MonoBehaviour
 
     void OnDestroy()//prevents memory leak
     {
-        if (allCellsBuffer != null)
+        if (allCellsBufferCPUSnapshot != null)
         {
-            allCellsBuffer.Release();
+            allCellsBufferCPUSnapshot.Release();
+
+        }
+        if (allCellsBufferCurrent != null)
+        {
+            allCellsBufferCurrent.Release();
+
+        }
+        if (changedCellsBuffer != null)
+        {
+            changedCellsBuffer.Release();
+
+        }
+        if (livingCellsBuffer != null)
+        {
+            livingCellsBuffer.Release();
 
         }
     }
