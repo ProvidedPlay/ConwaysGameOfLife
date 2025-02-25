@@ -95,6 +95,15 @@ public class MapComputeShaderManager : MonoBehaviour
         }
     }
 
+    public void ReleaseOldComputeBuffers()
+    {
+        allCellsBufferCPUSnapshot?.Release();// if allCellsBufferSnapshot != null, run .Release()
+        allCellsBufferCurrent?.Release();// if allCellsBufferSnapshot != null, run .Release()
+        changedCellsBuffer?.Release();// if allCellsBufferSnapshot != null, run .Release()
+        changedCellsCountBuffer?.Release();// if allCellsBufferSnapshot != null, run .Release()
+        livingCellsBuffer?.Release();// if allCellsBufferSnapshot != null, run .Release()
+        
+    }
     public void GenerateMap(int width, int height)
     {
         //update global map dimension variables
@@ -103,6 +112,9 @@ public class MapComputeShaderManager : MonoBehaviour
         totalCellsInMap = width * height;
 
         allCellsData = new uint[totalCellsInMap];
+
+        //Release old compute buffers
+        ReleaseOldComputeBuffers();
 
         //Create computebuffers to store cell data
         allCellsBufferCPUSnapshot = new ComputeBuffer(totalCellsInMap, sizeof(uint));  //Creates a new Compute buffer for use by a compute shader
@@ -175,7 +187,7 @@ public class MapComputeShaderManager : MonoBehaviour
 
 
         // Dispatch the compute shader
-        mapComputeShader.Dispatch(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, Mathf.CeilToInt(mapWidth / 16f), Mathf.CeilToInt(mapHeight / 16f), 1);
+        mapComputeShader.Dispatch(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, Mathf.CeilToInt(mapWidth * mapHeight / 256f), 1, 1);
 
         // Read back the count of changed cells after dispatch
         uint[] changedCount = new uint[1];

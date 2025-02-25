@@ -148,16 +148,19 @@ void LoadLivingCellsFromCPU(uint3 id : SV_DispatchThreadID)
     
 }
 
-[numthreads(16, 16, 1)]
+[numthreads(256, 1, 1)]
 void CompareCurrentCellsBufferToCPUSnapshot(uint3 id : SV_DispatchThreadID)
 {
-    uint x = id.x;
-    uint y = id.y;
+    uint currentCellIndex = id.x;
 
-    if (x >= gameBoardWidth || y >= gameBoardHeight)
+    if (currentCellIndex >= gameBoardWidth * gameBoardHeight)
+    {
         return;
+    }
 
-    uint currentCellIndex = y * gameBoardWidth + x;
+    uint x = currentCellIndex % gameBoardWidth; //the remainder is the cell's xaxis value
+    uint y = currentCellIndex / gameBoardWidth; //the value without the remainder is cell's yaxis value
+    
     uint currentCellState = AllCellsBufferCurrent[currentCellIndex];
     uint snapshottedCellState = AllCellsBufferCPUSnapshot[currentCellIndex];
 
