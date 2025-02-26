@@ -343,7 +343,7 @@ public class GameManager : MonoBehaviour
      */
     void KillOrBirthCell(Vector3Int tilePosition, bool isCellAlive)
     {
-        ColorTile(tilePosition, tileMap, isCellAlive ? onColor : deadColor);
+        ColorTile(tilePosition, tileMap, isCellAlive ? onColor : offColor);//Set to DeadColour when you implement it again
 
         if (isCellAlive)
         {

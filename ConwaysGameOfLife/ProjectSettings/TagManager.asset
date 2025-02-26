@@ -12,6 +12,7 @@ TagManager:
   - Tile Brush
   - Tile Brush Renderer
   - Selection Box
+  - GraphicsQuad
   layers:
   - Default
   - TransparentFX
