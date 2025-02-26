@@ -27,12 +27,12 @@ public class MapComputeShaderManager : MonoBehaviour
     public ComputeBuffer allCellsBufferCurrentTemp;
     public ComputeBuffer changedCellsBuffer;
     public ComputeBuffer changedCellsCountBuffer;
-    public ComputeBuffer livingCellsBuffer;
+    public ComputeBuffer allInputCellsBuffer;
 
     private int kernelIndexForInitializeGameBoard;
     private int kernelIndexForUpdateGameBoard;
     private int kernelIndexForWriteCurrentCellsBufferTempToCurrentCellsBuffer;
-    private int kernelIndexForLoadLivingCellsFromCPU;
+    private int kernelIndexForLoadInputCellsFromCPU;
     private int kernelIndexForCompareCurrentCellsBufferToCPUSnapshot;
 
 
@@ -45,7 +45,6 @@ public class MapComputeShaderManager : MonoBehaviour
 
     public uint[] allCellsData;
     public Cell[] changedCellsData;
-    private bool gpuUpdateRequestInProgress = false;
 
     void Awake()
     {
@@ -56,7 +55,7 @@ public class MapComputeShaderManager : MonoBehaviour
     {
         kernelIndexForInitializeGameBoard = mapComputeShader.FindKernel("InitializeGameBoard");
         kernelIndexForUpdateGameBoard = mapComputeShader.FindKernel("UpdateGameBoard");
-        kernelIndexForLoadLivingCellsFromCPU = mapComputeShader.FindKernel("LoadLivingCellsFromCPU");
+        kernelIndexForLoadInputCellsFromCPU = mapComputeShader.FindKernel("LoadInputCellsFromCPU");
         kernelIndexForCompareCurrentCellsBufferToCPUSnapshot = mapComputeShader.FindKernel("CompareCurrentCellsBufferToCPUSnapshot");
         kernelIndexForWriteCurrentCellsBufferTempToCurrentCellsBuffer = mapComputeShader.FindKernel("WriteCurrentCellsBufferTempToCurrentCellsBuffer");
 
@@ -110,7 +109,7 @@ public class MapComputeShaderManager : MonoBehaviour
         allCellsBufferCurrentTemp?.Release();
         changedCellsBuffer?.Release();
         changedCellsCountBuffer?.Release();
-        livingCellsBuffer?.Release();
+        allInputCellsBuffer?.Release();
         
     }
     public void GenerateMap(int width, int height)
@@ -139,7 +138,7 @@ public class MapComputeShaderManager : MonoBehaviour
         allCellsBufferCurrentTemp= new ComputeBuffer(totalCellsInMap, sizeof(uint));
         changedCellsBuffer = new ComputeBuffer(totalCellsInMap, sizeof(int) * 3);           // This size corresponds to the size of a Cell struct (an int2 for position and an int for value)
         changedCellsCountBuffer = new ComputeBuffer(1, sizeof(uint), ComputeBufferType.Counter); //ComputeBufferType.raw stores a typeless R32 value (32 bit)
-        livingCellsBuffer = new ComputeBuffer(totalCellsInMap, sizeof(int) * 2, ComputeBufferType.Structured);//set a livingCellsBuffer to the size of the total cells in the map, since that will be its max size
+        allInputCellsBuffer = new ComputeBuffer(totalCellsInMap, sizeof(int) * 3);//set a livingCellsBuffer to the size of the total cells in the map, since that will be its max size
 
         //Create the render texture that the compute shader will display the grid on
         CreateMapRenderTexture();
@@ -150,8 +149,9 @@ public class MapComputeShaderManager : MonoBehaviour
 
         //Align the Game Board Renderer Quad to the transform of the tilemap
         FitGameBoardGraphicsQuadToMatchTilemap();
-        
+
         //Set Compute Shader Buffer for each kernel that uses it
+        mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "ChangedCellsCountBuffer", changedCellsCountBuffer);
         mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
         mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBufferCurrent", allCellsBufferCurrent);
         mapComputeShader.SetBuffer(kernelIndexForInitializeGameBoard, "AllCellsBufferCurrentTemp", allCellsBufferCurrentTemp);
@@ -162,9 +162,9 @@ public class MapComputeShaderManager : MonoBehaviour
         mapComputeShader.SetBuffer(kernelIndexForWriteCurrentCellsBufferTempToCurrentCellsBuffer, "AllCellsBufferCurrent", allCellsBufferCurrent);
         mapComputeShader.SetBuffer(kernelIndexForWriteCurrentCellsBufferTempToCurrentCellsBuffer, "AllCellsBufferCurrentTemp", allCellsBufferCurrentTemp);
 
-        mapComputeShader.SetBuffer(kernelIndexForLoadLivingCellsFromCPU, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
-        mapComputeShader.SetBuffer(kernelIndexForLoadLivingCellsFromCPU, "AllCellsBufferCurrent", allCellsBufferCurrent);
-        mapComputeShader.SetBuffer(kernelIndexForLoadLivingCellsFromCPU, "LivingCellsBuffer", livingCellsBuffer);
+        mapComputeShader.SetBuffer(kernelIndexForLoadInputCellsFromCPU, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
+        mapComputeShader.SetBuffer(kernelIndexForLoadInputCellsFromCPU, "AllCellsBufferCurrent", allCellsBufferCurrent);
+        mapComputeShader.SetBuffer(kernelIndexForLoadInputCellsFromCPU, "AllInputCellsBuffer", allInputCellsBuffer);
 
         mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "ChangedCellsCountBuffer", changedCellsCountBuffer);
         mapComputeShader.SetBuffer(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, "AllCellsBufferCPUSnapshot", allCellsBufferCPUSnapshot);
@@ -225,91 +225,37 @@ public class MapComputeShaderManager : MonoBehaviour
 
         return changedCellsData;
     }
-    /*
-    public void RequestGOLDataFromComputeShader()
+
+    public void GiveInputCellsToComputeShader(Dictionary<Vector3Int, bool> allInputCells)
     {
-        if(!gpuUpdateRequestInProgress)
-        {
-            //tick GOL once (this code has been moved)
-            //mapComputeShader.Dispatch(kernelIndexForUpdateGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
-
-            // Request async readback ; this will request data on the gpu by running the OnGPUDataRecieved method asyncronously. When the data is recieved (aka request.GetData<uint>().CopyTo(cellData), that method will run, and the tilemap will be updated
-            gpuUpdateRequestInProgress = true;
-            AsyncGPUReadback.Request(changedCellsBuffer, OnGPUDataRecieved);
-        }
-    }
-
-    void OnGPUDataRecieved(AsyncGPUReadbackRequest request)
-    {
-        if(request.hasError)
-        {
-            Debug.Log("GPU Readback error!");
-            gpuUpdateRequestInProgress=false;
-            return;
-        }
-
-        //if the request has no error, copy the data from the GPU's AllCellsBuffer to the CPUs  changedCellsData[] array
-        request.GetData<Cell>().CopyTo(changedCellsData);
-
-        gpuUpdateRequestInProgress = false; //this line runs after the previous line is finished
-
-        //allCellsData is now ready to be read by the CPU
-
-        //run temporary test GetLivingCellsFromComputeShader
-        ProcessChangedCellsFromComputeShader();
-    }
-    */
-    public void ProcessChangedCellsFromComputeShader()
-    {
-        //Create a temporary array of uint[] to store data from the compute shader buffer, write the data from the allCellsBuffer into the cell data uint[] to be read by the CPU
-        //allCellsData = new uint[totalCellsInMap];
-        //allCellsBuffer.GetData(allCellsData);
-        /*
-        
-        int netCellsBirthed = 0;
-        int netCellsKilled = 0;
-        for (int i = 0; i < changedCellsData.Length; i++)
-        {
-            if (changedCellsData[i].cellValue == 1)
-            {
-                netCellsBirthed++;
-            }
-            if (changedCellsData[i].cellValue == 0)
-            {
-                netCellsKilled++;
-            }
-        }
-        
-        Debug.Log("All cells: " + allCellsData.Length+ ".   Net Cells Birthed: " + netCellsBirthed + "      .Net Cells Killed: " + netCellsKilled);
-        */
-    }
-
-    public void GiveLivingCellsToComputeShader(Dictionary<Vector3Int, bool> livingCells)
-    {
+        //First, dispatch the InitializeGameBoard dispatch to clear the game board (not expensive on GPU ever),
         mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
 
-        if (livingCells.Count > totalCellsInMap)
+        if (allInputCells.Count > totalCellsInMap)
         {
             Debug.Log("Warning, too many living cells! Increase buffer size!");
             return;
         }
         
-        int[] livingCellsData = new int[livingCells.Count * 2]; //This will store x and y pairs efficiently
-        int livingCellsDictionaryIndex = 0;
-        foreach (var entry in livingCells)
+        Cell[] allInputCellsData = new Cell[allInputCells.Count]; //This will store x and y pairs efficiently
+        int allInputCellsDataIndex = 0;
+        foreach(var cell in allInputCells)
         {
-            // Access the x and y values from Vector3Int key and write it to the livingcellsdata array,
-            livingCellsData[livingCellsDictionaryIndex * 2] = entry.Key.x; // this stores all the x values as all the odd indexes in the array
-            livingCellsData[livingCellsDictionaryIndex * 2 + 1] = entry.Key.y; //this stores all the y values as all the even indexes in the array
-            livingCellsDictionaryIndex++;
+
+            allInputCellsData[allInputCellsDataIndex].cellPosition.x = cell.Key.x;
+            allInputCellsData[allInputCellsDataIndex].cellPosition.y = cell.Key.y;
+
+            allInputCellsData[allInputCellsDataIndex].cellValue = cell.Value == true? 1 : 0;
+
+            allInputCellsDataIndex++;
         }
 
-        //send the living cells to the GPU
-        livingCellsBuffer.SetData(livingCellsData);
+        //send the input cells to the GPU
+        allInputCellsBuffer.SetData(allInputCellsData);
 
-        //First, dispatch the InitializeGameBoard dispatch to clear the game board (not expensive on GPU ever), then dispatch the compute shader kernel that will process the new living cells
-        mapComputeShader.SetInt("numLivingCells", livingCells.Count);
-        mapComputeShader.Dispatch(kernelIndexForLoadLivingCellsFromCPU, Mathf.CeilToInt((livingCells.Count + 1) / 256.0f), 1, 1);//run this in a single thread dimension of 256 threads
+        //dispatch the compute shader kernel that will process the new living cells
+        mapComputeShader.SetInt("numInputCells", allInputCells.Count);
+        mapComputeShader.Dispatch(kernelIndexForLoadInputCellsFromCPU, Mathf.CeilToInt((allInputCells.Count + 1) / 256.0f), 1, 1);//run this in a single thread dimension of 256 threads
     }
 
     void OnDestroy()//prevents memory leak

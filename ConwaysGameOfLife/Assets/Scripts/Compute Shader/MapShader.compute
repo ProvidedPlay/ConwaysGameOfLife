@@ -1,7 +1,7 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel InitializeGameBoard
 #pragma kernel UpdateGameBoard
-#pragma kernel LoadLivingCellsFromCPU
+#pragma kernel LoadInputCellsFromCPU
 #pragma kernel CompareCurrentCellsBufferToCPUSnapshot
 #pragma kernel WriteCurrentCellsBufferTempToCurrentCellsBuffer
 
@@ -19,7 +19,7 @@ RWStructuredBuffer<uint> AllCellsBufferCurrent; // stores the current game board
 RWStructuredBuffer<uint> AllCellsBufferCurrentTemp; // a cached version of the changed game board. When GOL ticks, changes are made to this board not the actual AllCellBufferCurrent. Once the full operation is complete, the values in this AllCellsBufferCurrent are set to the values in this cached version
 RWStructuredBuffer<CellData> ChangedCellsBuffer; //stores cells changed between the current CellsBuffer and the CPU Snapshot CellsBuffer, to be given back to the CPU to update; stores their x,y positions
 RWStructuredBuffer<uint> ChangedCellsCountBuffer; //a single element buffer that counts the number of changed cells in ChangedCellsBuffer
-StructuredBuffer<int2> LivingCellsBuffer;
+RWStructuredBuffer<CellData> AllInputCellsBuffer;
 
 float4 defaultColourOff;
 float4 defaultColourOn;
@@ -28,7 +28,7 @@ float4 defaultColourOn;
 uint gameBoardWidth;
 uint gameBoardHeight;
 
-int numLivingCells;
+int numInputCells;
 
 uint GetLivingNeighborCount(uint x, uint y)
 {
@@ -137,23 +137,24 @@ void UpdateGameBoard(uint3 id : SV_DispatchThreadID)
 }
 //Kernel #1 LoadLivingCellsFromCPU
 [numthreads(256, 1, 1)]
-void LoadLivingCellsFromCPU(uint3 id : SV_DispatchThreadID)
+void LoadInputCellsFromCPU(uint3 id : SV_DispatchThreadID)
 {
     int i = id.x; 
-    if (i >= numLivingCells)
+    if (i >= numInputCells)
     {
         return;
     }
     
     //retrieve the x,y position of the living cell
-    int2 livingCellPosition = LivingCellsBuffer[i]; // Even though the data in LivingCellsBuffer was copied from a single dimensional array "livingCellsData[]" (where each even value was the x value and each consecutive odd value is a y value), since LivingCellsBuffer is an <int2> it automatically combines consecutive values its given to be the 'x' and 'y' values of a single int2 respectively, this recombining the 1d array into a 2d array automatically
+    int2 inputCellPosition = AllInputCellsBuffer[i].position; 
     
     //flatten the (x,y) position to a 1d index holding both values for each indexed output value, this will be a 1 to 1 relation to the corresponding cell in our AllCellsBuffer
-    int livingCellIndex = livingCellPosition.y * gameBoardWidth + livingCellPosition.x;
+    int inputCellIndex = inputCellPosition.y * gameBoardWidth + inputCellPosition.x;
     
+    int inputCellValue = AllInputCellsBuffer[i].value;
     //Set that cell as alive in AllCellsBuffer
-    AllCellsBufferCPUSnapshot[livingCellIndex] = 1;
-    AllCellsBufferCurrent[livingCellIndex] = 1;
+    AllCellsBufferCPUSnapshot[inputCellIndex] = inputCellValue;
+    AllCellsBufferCurrent[inputCellIndex] = inputCellValue;
     
     
 }

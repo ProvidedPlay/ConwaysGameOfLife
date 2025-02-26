@@ -231,7 +231,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Coroutine state: game playing");
         settingsManager.UpdateGameStateText("PLAY MODE");
-        mapComputeShaderManager.GiveLivingCellsToComputeShader(livingCells);
+        mapComputeShaderManager.GiveInputCellsToComputeShader(allTiles);
         tileMapManager.ToggleHideTilemap(true);
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
