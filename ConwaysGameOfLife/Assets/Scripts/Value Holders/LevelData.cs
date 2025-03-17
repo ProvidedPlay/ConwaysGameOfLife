@@ -22,4 +22,10 @@ public class LevelData
         tileMapHeight = generatedTileMapHeight;
         livingCells = new List<Vector3Int>();
     }
+
+    public LevelData(int tileMapHeight, List<Vector3Int> livingCells)
+    {
+        this.tileMapHeight = tileMapHeight;
+        this.livingCells = livingCells;
+    }
 }

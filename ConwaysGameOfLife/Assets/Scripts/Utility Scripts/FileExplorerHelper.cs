@@ -32,4 +32,10 @@ public static class FileExplorerHelper
     {
         return Path.GetFileNameWithoutExtension(fileName);
     }
+    public static string ImportRLELevel(string rleFileDirectory)
+    {
+        ExtensionFilter[] extentionsToFilterFor = new[] { new ExtensionFilter("rle") };
+        string[] selectedFilePath = StandaloneFileBrowser.OpenFilePanel("Select RLE File", rleFileDirectory, extentionsToFilterFor, false);
+        return selectedFilePath.Length > 0 ? selectedFilePath[0] : null;
+    }
 }

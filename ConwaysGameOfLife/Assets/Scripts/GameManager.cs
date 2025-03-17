@@ -52,6 +52,7 @@ public class GameManager : MonoBehaviour
             UpdateGameSpeedToSpeedFactor();
         }
     }
+    public float importedRLEPaddingMultiplier;
     public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
     public Dictionary<Vector3Int, bool> selectedTiles = new();
     public Dictionary<Vector3Int, bool> livingCells = new();

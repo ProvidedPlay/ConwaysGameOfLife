@@ -6,6 +6,7 @@ using UnityEngine;
 public static class SaveLoadManager
 {
     public static string saveFolderDirectory = "/SaveData/";
+    public static string rleFilesFolderDirectory = "/RLEData";
     public static string customBrushesFolderDirectory = "/Brushes/CustomBrushes";
     public static string presetBrushesFolderDirectory = "/Brushes/PresetBrushes";
     public static void SaveLevelWithName(GameManager gameManager)
@@ -52,6 +53,35 @@ public static class SaveLoadManager
             return null;
         }
     }
+    public static LevelData ParseAndImportRLELevelFromFileExplorer(GameManager gameManager)
+    {
+        //find the path of the given RLE file
+        string rleLevelFolderPath = Application.persistentDataPath + rleFilesFolderDirectory;
+        string rleLevelFilePath = FileExplorerHelper.ImportRLELevel(rleLevelFolderPath);
+        if (File.Exists(rleLevelFilePath))
+        {
+            //if the rle file exists at the given path, parse the RLE into a LevelData object
+            string rleContent = File.ReadAllText(rleLevelFilePath);
+            LevelData loadedLevelData = RLEParser.ParseLevelDataFromRLEFile(rleContent, gameManager);
+
+            //save the generated level object to your save folder directory
+            string saveFolderPath = Application.persistentDataPath + saveFolderDirectory;
+            if (!Directory.Exists(saveFolderPath))
+            {
+                Directory.CreateDirectory(saveFolderPath);
+            }
+            string saveFilePath = Application.persistentDataPath + saveFolderDirectory + Path.GetFileNameWithoutExtension(rleLevelFilePath) + ".json";//creates a save file path in the save folder with the name of the imported rle file
+            SaveLevelToFilePath(loadedLevelData, saveFilePath);
+
+            return loadedLevelData;
+        }
+        else
+        {
+            //error message
+            Debug.LogError("Error! No RLE file found at " + rleLevelFilePath);
+            return null;
+        }
+    }
     public static string[] CreateBrushFilePathAndName(bool isCustomBrush) //returns an array of 2 strings: index 0 = brush folder path, 1 = brush folder name
     {
         //create custom/preset brush directory if it doesnt exist
@@ -78,7 +108,14 @@ public static class SaveLoadManager
         //create save file at specified path with specified save file name
         File.WriteAllText(brushSaveFilePath, levelDataJSON);
     }
+    public static void SaveLevelToFilePath(LevelData levelDataObject, string levelSaveFilePath)
+    {
+        //turn the level data object into a JSON string
+        string levelDataJSON = JsonUtility.ToJson(levelDataObject);
 
+        //create save file at specified path with specified save file name
+        File.WriteAllText(levelSaveFilePath, levelDataJSON);
+    }
     public static List<BrushData> LoadBrushesFromFileExplorer(bool loadCustomBrush)
     {
         List<BrushData> loadedBrushDataObjects = new List<BrushData>();
@@ -97,7 +134,7 @@ public static class SaveLoadManager
             else
             {
                 //error message
-                Debug.LogError("Error! No save file found at " + brushFilePath);
+                Debug.LogError("Error! No brush file found at " + brushFilePath);
                 return null;
             }
         }

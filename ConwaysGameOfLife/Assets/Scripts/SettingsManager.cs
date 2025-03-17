@@ -195,6 +195,17 @@ public class SettingsManager : MonoBehaviour
         }
     }
 
+    public void OnClickImportRLEButton()
+    {
+        //enter logic here
+        LevelData newLevelDataObject = SaveLoadManager.ParseAndImportRLELevelFromFileExplorer(gameManager);
+        if(newLevelDataObject != null)
+        {
+            gameManager.GameLoad(newLevelDataObject);
+
+        }
+    }
+
     /*
      * Advanced Settings Menu Buttons
      */
