@@ -40,7 +40,6 @@ public class GameManager : MonoBehaviour
     public float minimumTickIntervalTime;
     public float maximumTickIntervalTime;
     public float tickIntervalTime;
-    [Range(1,10)]
     [SerializeField]
     private int gameSpeedFactor;
     public int GameSpeedFactor

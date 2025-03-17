@@ -26,7 +26,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
     public float currentCameraOrthographicWidth;
 
     public int maxZoomFactor;
-    //[Range(0, 10)]
+    [Range(0, 10)]
     [SerializeField]
     private int zoomFactor;
     public int ZoomFactor
@@ -38,7 +38,7 @@ public class CameraToGameBoardResizer : MonoBehaviour
         set
         {
             zoomFactor = Mathf.Clamp(value, 0, maxZoomFactor);
-            float newCamHeight = Mathf.Lerp(minimumCameraOrthographicHeight, cameraBounds.y, (float)zoomFactor/maxZoomFactor);
+            float newCamHeight = Mathf.Lerp(minimumCameraOrthographicHeight, cameraBounds.y, (float)zoomFactor/10);
             UpdateCameraHeight(newCamHeight);
         }
     }
