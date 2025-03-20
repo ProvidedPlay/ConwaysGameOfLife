@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 using Unity.Mathematics;
 using UnityEngine;
@@ -174,10 +175,17 @@ public class MapComputeShaderManager : MonoBehaviour
         //Pass the renderTexture to the Compute shader
         mapComputeShader.SetTexture(kernelIndexForInitializeGameBoard, "MapRenderTexture", mapRenderTexture);
         mapComputeShader.SetTexture(kernelIndexForWriteCurrentCellsBufferTempToCurrentCellsBuffer, "MapRenderTexture", mapRenderTexture);
+        mapComputeShader.SetTexture(kernelIndexForLoadInputCellsFromCPU, "MapRenderTexture", mapRenderTexture);
 
         //Set up the texture colours as float4 values
         UpdateGraphicsColours();
 
+        //Dispatch the InitializeGameBoard kernel
+        mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);//Mathf.CeilToInt(f) returns the smallest int greater than or equal to f. So if height is 10 ,then 10/8f= 1.25, this returns 2. Why use this? Because it rounds UP instead of DOWN, that way theres always a thread batch calculating the stragglers if there are more cells than the nearest perfect group of 8x8. (otherwise the remainder cells wont be calculated))
+
+    }
+    public void InitializeGameBoard()
+    {
         //Dispatch the InitializeGameBoard kernel
         mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);//Mathf.CeilToInt(f) returns the smallest int greater than or equal to f. So if height is 10 ,then 10/8f= 1.25, this returns 2. Why use this? Because it rounds UP instead of DOWN, that way theres always a thread batch calculating the stragglers if there are more cells than the nearest perfect group of 8x8. (otherwise the remainder cells wont be calculated))
 
@@ -226,36 +234,47 @@ public class MapComputeShaderManager : MonoBehaviour
         return changedCellsData;
     }
 
-    public void GiveInputCellsToComputeShader(Dictionary<Vector3Int, bool> allInputCells)
+    public void GiveAllInputCellsToComputeShader(Dictionary<Vector3Int, bool> inputCells)
     {
         //First, dispatch the InitializeGameBoard dispatch to clear the game board (not expensive on GPU ever),
         mapComputeShader.Dispatch(kernelIndexForInitializeGameBoard, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
 
-        if (allInputCells.Count > totalCellsInMap)
+        if (inputCells.Count > totalCellsInMap)
         {
             Debug.Log("Warning, too many living cells! Increase buffer size!");
             return;
         }
-        
-        Cell[] allInputCellsData = new Cell[allInputCells.Count]; //This will store x and y pairs efficiently
-        int allInputCellsDataIndex = 0;
-        foreach(var cell in allInputCells)
+
+        Cell[] inputCellsData = new Cell[inputCells.Count]; //This will store x and y pairs efficiently
+        int inputCellsDataIndex = 0;
+        foreach (var cell in inputCells)
         {
 
-            allInputCellsData[allInputCellsDataIndex].cellPosition.x = cell.Key.x;
-            allInputCellsData[allInputCellsDataIndex].cellPosition.y = cell.Key.y;
+            inputCellsData[inputCellsDataIndex].cellPosition.x = cell.Key.x;
+            inputCellsData[inputCellsDataIndex].cellPosition.y = cell.Key.y;
 
-            allInputCellsData[allInputCellsDataIndex].cellValue = cell.Value == true? 1 : 0;
+            inputCellsData[inputCellsDataIndex].cellValue = cell.Value == true ? 1 : 0;
 
-            allInputCellsDataIndex++;
+            inputCellsDataIndex++;
         }
+    }
+    public void GiveSpecificInputCellsToComputeShader(Vector3Int cellPosition, bool cellValue)
+    {
+        //create a single element buffer (can extend this to accept more than one cell at a time later if needed)
+        Cell[] inputCellsData = new Cell[1]; //This will store x and y pairs efficiently
+
+        //convert the input cell into a format the compute shader will read
+        inputCellsData[0].cellPosition.x = cellPosition.x;
+        inputCellsData[0].cellPosition.y = cellPosition.y;
+        inputCellsData[0].cellValue = cellValue == true ? 1 : 0;
+
 
         //send the input cells to the GPU
-        allInputCellsBuffer.SetData(allInputCellsData);
+        allInputCellsBuffer.SetData(inputCellsData);
 
         //dispatch the compute shader kernel that will process the new living cells
-        mapComputeShader.SetInt("numInputCells", allInputCells.Count);
-        mapComputeShader.Dispatch(kernelIndexForLoadInputCellsFromCPU, Mathf.CeilToInt((allInputCells.Count + 1) / 256.0f), 1, 1);//run this in a single thread dimension of 256 threads
+        mapComputeShader.SetInt("numInputCells", inputCellsData.Count());
+        mapComputeShader.Dispatch(kernelIndexForLoadInputCellsFromCPU, Mathf.CeilToInt((inputCellsData.Count() + 1) / 256.0f), 1, 1);//run this in a single thread dimension of 256 threads
     }
 
     void OnDestroy()//prevents memory leak

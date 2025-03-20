@@ -78,6 +78,10 @@ public class GameManager : MonoBehaviour
         {
             GameRestart();
         }
+        if(Input.GetKeyDown(KeyCode.V))
+        {
+            mapComputeShaderManager.InitializeGameBoard();
+        }
 
     }
     private void OnValidate()
@@ -210,7 +214,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Coroutine state: game setup");
         settingsManager.UpdateGameStateText("EDIT MODE");
-        tileMapManager.ToggleHideTilemap(false);
+        //tileMapManager.ToggleHideTilemap(false);
         ToggleOverlayGrid(CheckIfToggleGridOnByDefault());
         brushManager.ToggleBrushCursor(true);
         while (!proceedToNextGameState)
@@ -231,8 +235,8 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Coroutine state: game playing");
         settingsManager.UpdateGameStateText("PLAY MODE");
-        mapComputeShaderManager.GiveInputCellsToComputeShader(allTiles);
-        tileMapManager.ToggleHideTilemap(true);
+        //mapComputeShaderManager.GiveAllInputCellsToComputeShader(allTiles);
+        //tileMapManager.ToggleHideTilemap(true);
         ToggleOverlayGrid(false);
         brushManager.ToggleBrushCursor(false);
         brushManager.ToggleSelectionCursor(false);
@@ -344,7 +348,7 @@ public class GameManager : MonoBehaviour
     void KillOrBirthCell(Vector3Int tilePosition, bool isCellAlive)
     {
         ColorTile(tilePosition, tileMap, isCellAlive ? onColor : offColor);//Set to DeadColour when you implement it again
-
+        /*
         if (isCellAlive)
         {
             livingCells[tilePosition] = true;
@@ -355,6 +359,8 @@ public class GameManager : MonoBehaviour
             livingCells.Remove(tilePosition);
             allTiles[tilePosition] = false;
         }
+        */
+        mapComputeShaderManager.GiveSpecificInputCellsToComputeShader(tilePosition, isCellAlive);// !!Testing ONLY
     }
     /*
     public Dictionary<Vector3Int, bool> GetAdjacentTiles(Vector3Int targetCell)

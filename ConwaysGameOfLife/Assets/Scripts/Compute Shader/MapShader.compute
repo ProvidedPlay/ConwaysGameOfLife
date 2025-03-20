@@ -63,7 +63,6 @@ uint GetLivingNeighborCount(uint x, uint y)
 void InitializeGameBoard(uint3 id : SV_DispatchThreadID) //For each pixel in the 2d texture AllCellsGrid (each value of x,y), sets the value of the cell to 0 (aka dead)
 {
     
-    float4 defaultColourOff = float4(1, 0.4, 0, 0.4);
     uint x = id.x;
     uint y = id.y;
     if (x >= gameBoardWidth || y >= gameBoardHeight)//this makes sure that the compute shader doesnt go out of bounds, this is because the last batch of threads may have more threads (ie more x's and y's) than the board has cells.
@@ -156,7 +155,11 @@ void LoadInputCellsFromCPU(uint3 id : SV_DispatchThreadID)
     AllCellsBufferCPUSnapshot[inputCellIndex] = inputCellValue;
     AllCellsBufferCurrent[inputCellIndex] = inputCellValue;
     
+    //Render the new cells onto the texture
     
+    float4 cellColour;
+    cellColour = inputCellValue == 1 ? defaultColourOn : defaultColourOff;
+    MapRenderTexture[inputCellPosition] = cellColour;
 }
 
 [numthreads(256, 1, 1)]
@@ -210,3 +213,4 @@ void WriteCurrentCellsBufferTempToCurrentCellsBuffer(uint3 id : SV_DispatchThrea
     cellColour = newCellState == 1 ? defaultColourOn : defaultColourOff;
     MapRenderTexture[id.xy] = cellColour;
 }
+
