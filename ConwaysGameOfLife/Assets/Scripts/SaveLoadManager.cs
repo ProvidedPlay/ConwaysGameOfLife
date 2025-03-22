@@ -78,7 +78,7 @@ public static class SaveLoadManager
         else
         {
             //error message
-            Debug.LogError("Error! No RLE file found at " + rleLevelFilePath);
+            Debug.Log("Error! No RLE file found at " + rleLevelFilePath);
             return null;
         }
     }

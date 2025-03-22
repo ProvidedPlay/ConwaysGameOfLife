@@ -37,9 +37,9 @@ public class GameManager : MonoBehaviour
     public int maxHorizontalCellsBeforeGridDefaultOff;
 
     public int maxGameSpeedFactor;
-    public float minimumTickIntervalTime;
-    public float maximumTickIntervalTime;
-    public float tickIntervalTime;
+    public double minimumTickIntervalTime;
+    public double maximumTickIntervalTime;
+    public double tickIntervalTime;
     [SerializeField]
     private int gameSpeedFactor;
     public int GameSpeedFactor
@@ -74,7 +74,7 @@ public class GameManager : MonoBehaviour
         }
         if(Input.GetKeyDown(KeyCode.V))
         {
-            mapComputeShaderManager.InitializeGameBoard();
+            Application.targetFrameRate = 700;
         }
 
     }
@@ -150,6 +150,18 @@ public class GameManager : MonoBehaviour
         foreach(Vector3Int livingCellLocation in livingCellLocations)
         {
             KillOrBirthCell(livingCellLocation, true);
+        }
+    }
+    /*
+     * New Coroutine Timer Logic (because unity's waitforseconds only uses floats, which aren't precise enough
+     */
+    IEnumerator WaitForDoubleSeconds(double waitInterval)
+    {
+        double targetTime = Time.realtimeSinceStartup + waitInterval;
+
+        while (Time.realtimeSinceStartup < targetTime)
+        {
+            yield return null;  // Wait until the time has passed
         }
     }
 
@@ -235,7 +247,9 @@ public class GameManager : MonoBehaviour
 
             RunCellLifeCycleLoop();
 
-            yield return new WaitForSeconds(tickIntervalTime);
+            //yield return new WaitForSeconds(tickIntervalTime);
+            yield return StartCoroutine(WaitForDoubleSeconds(tickIntervalTime));
+
         }
         Debug.Log("exited game playing");
         //mapComputeShaderManager.GetChangedCellsDataFromComputeShader();
@@ -380,7 +394,7 @@ public class GameManager : MonoBehaviour
      */
     public void UpdateGameSpeedToSpeedFactor()
     {
-        tickIntervalTime = 1f /Mathf.Pow(2,GameSpeedFactor);
+        tickIntervalTime = 1.0 /Math.Pow(2.0,GameSpeedFactor);
     }
     public void IncrementGameSpeedFactor(int gameSpeedFactorChange)
     {

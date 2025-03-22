@@ -34,7 +34,7 @@ public static class RLEParser
         //Extract the pattern data
         foreach (string line in linesInRLE)
         {
-            if (line.StartsWith("x") || line.StartsWith("#")) continue; // skip metadata
+            if (line.StartsWith("x") || line.StartsWith("#") || line.StartsWith("[")) continue; // skip metadata
             if (line.StartsWith("!"))
             {
                 patternData += line.Replace("!", "").Trim();//if the line contains !(indicator of end of file), replace ! with nothing, then remove all white space after that point from the line.
@@ -46,7 +46,7 @@ public static class RLEParser
 
         //Process pattern line by line
         //MatchCollection matches = Regex.Matches(patternData, @"(\d*[bo$])");//a MatchCollection object represents a set of succe3ssful matches found via the Regex.Matches function; Regex.Matches searches a string (first parameter) for all occurrences of a regular expression and returns all matches as sets
-        MatchCollection matches = Regex.Matches(patternData, @"(\d+[bo$]|[bo$])");//a MatchCollection object represents a set of succe3ssful matches found via the Regex.Matches function; Regex.Matches searches a string (first parameter) for all occurrences of a regular expression and returns all matches as sets
+        MatchCollection matches = Regex.Matches(patternData, @"(\d+[bo$.]|[bo$.])");//a MatchCollection object represents a set of succe3ssful matches found via the Regex.Matches function; Regex.Matches searches a string (first parameter) for all occurrences of a regular expression and returns all matches as sets
         /*
          * Regex pattern explanation
          * EG: (\d*[bo$])
@@ -59,6 +59,7 @@ public static class RLEParser
          *  2. [bo$] (Match a Single Character)
          *      [bo$] - A character class that matches one of the following three characters:
          *      'b' - Dead cells (background cells, no action needed).
+         *      '.' - Dead cells alternative (background cells, no action needed).
          *      'o' - Live cells (we will store these in our JSON).
          *      '$' - New row (moves the cursor to the next line).
          */
@@ -121,7 +122,7 @@ public static class RLEParser
 
             char symbol = token[token.Length - 1]; //the symbol in question is the last character in the token, earlier characters may be repeat numbers
 
-            if (symbol == 'b') // Dead cells (skip)
+            if (symbol == 'b' || symbol == '.') // Dead cells (skip)
             {
                 currentX += repeat;
             }
