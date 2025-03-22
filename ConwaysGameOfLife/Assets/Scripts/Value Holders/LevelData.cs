@@ -13,7 +13,14 @@ public class LevelData
     public LevelData(GameManager gameManager)
     {
         //data required to load a save state with living cells
-        livingCells = gameManager.livingCells.Keys.ToList();
+        List<Vector3Int> newLivingCells = new List<Vector3Int>();
+        Cell[] livingCellsArray;
+        livingCellsArray = gameManager.mapComputeShaderManager.GetAllLivingCellsFromBounds(gameManager.tileMapManager.tileMapBounds.min, gameManager.tileMapManager.tileMapBounds.max);
+        foreach (var cell in livingCellsArray)
+        {
+            newLivingCells.Add(new(cell.cellPosition.x, cell.cellPosition.y, 0));
+        }
+        livingCells = newLivingCells;
         tileMapHeight = gameManager.tileMapManager.TileMapHeight;
     }
 

@@ -25,6 +25,10 @@ public static class TileMapGenerationHelper
         return cellDict;
 
     }
+    public static bool CellIsWithinMapBounds(Vector3Int cellPosition, BoundsInt tileMapBounds)
+    {
+        return tileMapBounds.Contains(cellPosition);
+    }
     public static void ColorTile(Vector3Int tilePosition, Tilemap tileMap, Color desiredColor)
     {
         tileMap.SetTileFlags(tilePosition, TileFlags.None);

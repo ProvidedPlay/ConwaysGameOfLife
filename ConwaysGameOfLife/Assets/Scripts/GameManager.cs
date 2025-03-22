@@ -52,11 +52,11 @@ public class GameManager : MonoBehaviour
         }
     }
     public float importedRLEPaddingMultiplier;
-    public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
-    public Dictionary<Vector3Int, bool> selectedTiles = new();
-    public Dictionary<Vector3Int, bool> livingCells = new();
-    public Dictionary<Vector3Int, int> deadCellConsiderationDict = new();
-    public Dictionary<Vector3Int, bool> cellsMarkedForLifeChange = new();
+    //public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
+    //public Dictionary<Vector3Int, bool> selectedTiles = new();
+    //public Dictionary<Vector3Int, bool> livingCells = new();
+    //public Dictionary<Vector3Int, int> deadCellConsiderationDict = new();
+    //public Dictionary<Vector3Int, bool> cellsMarkedForLifeChange = new();
     public TileArrayData[] adjacentTiles = new TileArrayData[8];
 
     private void Awake()
@@ -118,13 +118,13 @@ public class GameManager : MonoBehaviour
      */
     void InstantiateTilesPositionArray()
     {
-        if (tileMapManager != null && tileMap != null && defaultTile != null && allTiles != null)
+        if (tileMapManager != null && tileMap != null && defaultTile != null)
         {
             ClearAllTiles();
             foreach (var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
             {
                 //Debug.Log(tilePosition.ToString());
-                allTiles.Add(tilePosition, false);
+                //allTiles.Add(tilePosition, false);
                 tileMap.SetTile(tilePosition, defaultTile);
                 overlayGridTileMap.SetTile(tilePosition, gridTile);
                 ColorTile(tilePosition, tileMap, offColor);
@@ -136,11 +136,11 @@ public class GameManager : MonoBehaviour
     }
     public void ClearAllTiles()
     {
-        allTiles.Clear();
-        livingCells.Clear();
-        cellsMarkedForLifeChange.Clear();
-        deadCellConsiderationDict.Clear();
-        selectedTiles.Clear();
+        //allTiles.Clear();
+        //livingCells.Clear();
+        //cellsMarkedForLifeChange.Clear();
+        //deadCellConsiderationDict.Clear();
+        //selectedTiles.Clear();
 
         tileMap.ClearAllTiles();
         overlayGridTileMap.ClearAllTiles();
@@ -329,7 +329,7 @@ public class GameManager : MonoBehaviour
             foreach (Vector3Int brushCellPosition in brushCellPositions)
             {
                 //if (allTiles.ContainsKey(brushCellPosition) && allTiles[brushCellPosition] != flipTileOn)
-                if (allTiles.ContainsKey(brushCellPosition))//no longer check if tile was already off, since alltiles is always off. Maybe reintroduce via compute shader
+                if (TileMapGenerationHelper.CellIsWithinMapBounds(brushCellPosition, tileMapManager.tileMapBounds))//no longer check if tile was already off, since alltiles is always off. Maybe reintroduce via compute shader
                 {
                     KillOrBirthCell(brushCellPosition, flipTileOn);
                 }
@@ -379,7 +379,6 @@ public class GameManager : MonoBehaviour
         };
         return adjacentTiles;
     }
-    */
     void PopulateAdjacentTilesDict(Vector3Int targetCell)
     {
         {
@@ -435,7 +434,7 @@ public class GameManager : MonoBehaviour
     {
         
     }
-
+    
     void ConsiderLivingCells()
     {
         foreach (var livingCell in livingCells)
@@ -465,7 +464,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    /*
+    
     void ConsiderLivingCells()
     {
         foreach(var livingCell in livingCells)
@@ -530,7 +529,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-    */
+    
     void ConsiderDeadCells()
     {
         foreach (var deadCell in deadCellConsiderationDict)
@@ -557,6 +556,7 @@ public class GameManager : MonoBehaviour
         }
         cellsMarkedForLifeChange.Clear();
     }
+    */
     void RunCellLifeCycleLoop()
     {
         mapComputeShaderManager.TickConwaysGameOfLifeOnComputeShader();
