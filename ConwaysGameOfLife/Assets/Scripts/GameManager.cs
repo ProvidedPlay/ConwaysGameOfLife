@@ -115,12 +115,14 @@ public class GameManager : MonoBehaviour
         if (tileMapManager != null && tileMap != null && defaultTile != null)
         {
             ClearAllTiles();
+            /*
             foreach (var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
             {
                 //tileMap.SetTile(tilePosition, defaultTile);
                 //overlayGridTileMap.SetTile(tilePosition, gridTile);
                 //ColorTile(tilePosition, tileMap, offColor);
             }
+            */
             tilemapZAxisPosition = (int)tileMap.transform.position.z;
 
             mapComputeShaderManager.GenerateMap(tileMapManager.TileMapWidth, tileMapManager.TileMapHeight);//generate map in compute shader
