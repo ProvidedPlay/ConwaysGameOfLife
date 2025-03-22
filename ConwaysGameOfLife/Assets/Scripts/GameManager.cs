@@ -250,7 +250,7 @@ public class GameManager : MonoBehaviour
         }
         Debug.Log("exited game playing");
         //mapComputeShaderManager.GetChangedCellsDataFromComputeShader();
-        UpdateBoardStateFromComputeShader();
+        //UpdateBoardStateFromComputeShader();//no longer needed
 
         yield return new WaitForEndOfFrame();
         proceedToNextGameState = false;
@@ -328,7 +328,8 @@ public class GameManager : MonoBehaviour
         {
             foreach (Vector3Int brushCellPosition in brushCellPositions)
             {
-                if (allTiles.ContainsKey(brushCellPosition) && allTiles[brushCellPosition] != flipTileOn)
+                //if (allTiles.ContainsKey(brushCellPosition) && allTiles[brushCellPosition] != flipTileOn)
+                if (allTiles.ContainsKey(brushCellPosition))//no longer check if tile was already off, since alltiles is always off. Maybe reintroduce via compute shader
                 {
                     KillOrBirthCell(brushCellPosition, flipTileOn);
                 }

@@ -4,6 +4,7 @@
 #pragma kernel LoadInputCellsFromCPU
 #pragma kernel CompareCurrentCellsBufferToCPUSnapshot
 #pragma kernel WriteCurrentCellsBufferTempToCurrentCellsBuffer
+#pragma kernel WriteLivingCellsWithinBoundsToOutputBuffer
 
 struct CellData
 {
@@ -17,8 +18,8 @@ RWTexture2D<float4> MapRenderTexture;
 RWStructuredBuffer<uint> AllCellsBufferCPUSnapshot; // stores a snapshot of the game board (when the play button was last hit) as a 1 dimensional buffer, 
 RWStructuredBuffer<uint> AllCellsBufferCurrent; // stores the current game board as a 1 dimensional buffer
 RWStructuredBuffer<uint> AllCellsBufferCurrentTemp; // a cached version of the changed game board. When GOL ticks, changes are made to this board not the actual AllCellBufferCurrent. Once the full operation is complete, the values in this AllCellsBufferCurrent are set to the values in this cached version
-RWStructuredBuffer<CellData> ChangedCellsBuffer; //stores cells changed between the current CellsBuffer and the CPU Snapshot CellsBuffer, to be given back to the CPU to update; stores their x,y positions
-RWStructuredBuffer<uint> ChangedCellsCountBuffer; //a single element buffer that counts the number of changed cells in ChangedCellsBuffer
+RWStructuredBuffer<CellData> OutputCellsBuffer; //stores cells changed between the current CellsBuffer and the CPU Snapshot CellsBuffer, to be given back to the CPU to update; stores their x,y positions; alternately, stores all output cells when required from cpu
+RWStructuredBuffer<uint> OutputCellsCountBuffer; //a single element buffer that counts the number of output cells in OutputCellsBuffer
 RWStructuredBuffer<CellData> AllInputCellsBuffer;
 
 float4 defaultColourOff;
@@ -27,6 +28,9 @@ float4 defaultColourOn;
 
 uint gameBoardWidth;
 uint gameBoardHeight;
+
+uint2 boundsMin;
+uint2 boundsMax;
 
 int numInputCells;
 
@@ -81,7 +85,7 @@ void InitializeGameBoard(uint3 id : SV_DispatchThreadID) //For each pixel in the
     
     if (id.x == 0 && id.y == 0)//Only one thread needs to do this
     {
-        ChangedCellsCountBuffer[0] = 0;
+        OutputCellsCountBuffer[0] = 0;
     }
     //LivingCellsBuffer[cellIndex] = 0;
     
@@ -134,7 +138,7 @@ void UpdateGameBoard(uint3 id : SV_DispatchThreadID)
     }
     AllCellsBufferCurrentTemp[cellIndex] = newCellState;
 }
-//Kernel #1 LoadLivingCellsFromCPU
+
 [numthreads(256, 1, 1)]
 void LoadInputCellsFromCPU(uint3 id : SV_DispatchThreadID)
 {
@@ -182,9 +186,9 @@ void CompareCurrentCellsBufferToCPUSnapshot(uint3 id : SV_DispatchThreadID)
     if (currentCellState != snapshottedCellState)
     {
         uint newChangedCellIndex;
-        InterlockedAdd(ChangedCellsCountBuffer[0], 1, newChangedCellIndex); // Get the next available index; adds the 1 to the value of the current ChangedCellsCount (which is stored at element 0 of the ChangedCellsCountBuffer), then sets the newChangedCellIndex to that number
-        ChangedCellsBuffer[newChangedCellIndex].position = int2(x, y); // Store the changed cell's position in the ChangedCellsBuffer, at the index determined by the value of newChangedCellIndex
-        ChangedCellsBuffer[newChangedCellIndex].value = currentCellState; //store the changed cell's new state
+        InterlockedAdd(OutputCellsCountBuffer[0], 1, newChangedCellIndex); // Get the next available index; adds the 1 to the value of the current ChangedCellsCount (which is stored at element 0 of the ChangedCellsCountBuffer), then sets the newChangedCellIndex to that number
+        OutputCellsBuffer[newChangedCellIndex].position = int2(x, y); // Store the changed cell's position in the ChangedCellsBuffer, at the index determined by the value of newChangedCellIndex
+        OutputCellsBuffer[newChangedCellIndex].value = currentCellState; //store the changed cell's new state
     }
 }
 
@@ -212,5 +216,30 @@ void WriteCurrentCellsBufferTempToCurrentCellsBuffer(uint3 id : SV_DispatchThrea
     float4 cellColour;
     cellColour = newCellState == 1 ? defaultColourOn : defaultColourOff;
     MapRenderTexture[id.xy] = cellColour;
+}
+[numthreads(256,1,1)]
+void WriteLivingCellsWithinBoundsToOutputBuffer(uint3 id : SV_DispatchThreadID)
+{
+    uint currentCellIndex = id.x;
+    uint x = currentCellIndex % gameBoardWidth; //the remainder is the cell's xaxis value
+    uint y = currentCellIndex / gameBoardWidth; //the value without the remainder is cell's yaxis value
+
+    if (!(currentCellIndex < gameBoardWidth * gameBoardHeight && boundsMin.x <= x && x <= boundsMax.x && boundsMin.y <= y && y <= boundsMax.y))//if the thread ID is not pointing at a cell within the set selection bounds, dont run the kernel
+    {
+        return;
+    }
+
+    uint currentCellState = AllCellsBufferCurrent[currentCellIndex];
+    
+    // If the cell is alive, add it to OutputCellsBuffer
+    if (currentCellState == 1)
+    {
+        uint newOutputCellIndex;
+        InterlockedAdd(OutputCellsCountBuffer[0], 1, newOutputCellIndex); // Get the next available index; adds the 1 to the value of the current OutputCellsCount (which is stored at element 0 of the OutputCellsCountBuffer), then sets the newOutputCellIndex to that number
+        OutputCellsBuffer[newOutputCellIndex].position = int2(x, y); // Store the output cell's position in the OutputCellsBuffer, at the index determined by the value of newOutputCellIndex
+        OutputCellsBuffer[newOutputCellIndex].value = currentCellState; //Store the Output cell's new state
+    }
+
+
 }
 
