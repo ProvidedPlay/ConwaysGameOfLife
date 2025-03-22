@@ -218,11 +218,15 @@ public class MapComputeShaderManager : MonoBehaviour
         mapComputeShader.SetInts("boundsMin", minBounds.x, minBounds.y);
         mapComputeShader.SetInts("boundsMax", maxBounds.x, maxBounds.y);
 
+        //get bounds width and height
+        int boundsWidth = maxBounds.x - minBounds.x;
+        int boundsHeight = maxBounds.y - minBounds.y;
+
         //Reset the outputcount buffer to 0
         outputCellsCountBuffer.SetCounterValue(0);
 
         // Dispatch the compute shader
-        mapComputeShader.Dispatch(kernelIndexForWriteLivingCellsWithinBoundsToOutputBuffer, Mathf.CeilToInt(mapWidth * mapHeight / 256f), 1, 1);
+        mapComputeShader.Dispatch(kernelIndexForWriteLivingCellsWithinBoundsToOutputBuffer, Mathf.CeilToInt(boundsWidth / 16f), Mathf.CeilToInt(boundsHeight / 16f), 1);
 
         // Read back the count of output cells after dispatch
         uint[] outputCellsCount = new uint[1];

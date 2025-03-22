@@ -216,13 +216,15 @@ void WriteCurrentCellsBufferTempToCurrentCellsBuffer(uint3 id : SV_DispatchThrea
     cellColour = newCellState == 1 ? defaultColourOn : defaultColourOff;
     MapRenderTexture[id.xy] = cellColour;
 }
-[numthreads(256,1,1)]
+[numthreads(16,16,1)]
 void WriteLivingCellsWithinBoundsToOutputBuffer(uint3 id : SV_DispatchThreadID)
 {
-    uint currentCellIndex = id.x;
-    uint x = currentCellIndex % gameBoardWidth; //the remainder is the cell's xaxis value
-    uint y = currentCellIndex / gameBoardWidth; //the value without the remainder is cell's yaxis value
 
+    uint x = id.x + boundsMin.x;
+    uint y = id.y + boundsMin.y;
+    
+    uint currentCellIndex = y * gameBoardWidth + x;
+    
     if (!(currentCellIndex < gameBoardWidth * gameBoardHeight && boundsMin.x <= x && x <= boundsMax.x && boundsMin.y <= y && y <= boundsMax.y))//if the thread ID is not pointing at a cell within the set selection bounds, dont run the kernel
     {
         return;
