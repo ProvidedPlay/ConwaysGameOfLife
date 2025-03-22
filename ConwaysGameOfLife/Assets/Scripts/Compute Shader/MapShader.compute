@@ -14,7 +14,6 @@ struct CellData
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> MapRenderTexture;
-//RWTexture2D<float> AllCellsGrid;
 RWStructuredBuffer<uint> AllCellsBufferCPUSnapshot; // stores a snapshot of the game board (when the play button was last hit) as a 1 dimensional buffer, 
 RWStructuredBuffer<uint> AllCellsBufferCurrent; // stores the current game board as a 1 dimensional buffer
 RWStructuredBuffer<uint> AllCellsBufferCurrentTemp; // a cached version of the changed game board. When GOL ticks, changes are made to this board not the actual AllCellBufferCurrent. Once the full operation is complete, the values in this AllCellsBufferCurrent are set to the values in this cached version

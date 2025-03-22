@@ -52,11 +52,6 @@ public class GameManager : MonoBehaviour
         }
     }
     public float importedRLEPaddingMultiplier;
-    //public Dictionary<Vector3Int, bool> allTiles = new(); //Dict key = transform, value = isLiving bool
-    //public Dictionary<Vector3Int, bool> selectedTiles = new();
-    //public Dictionary<Vector3Int, bool> livingCells = new();
-    //public Dictionary<Vector3Int, int> deadCellConsiderationDict = new();
-    //public Dictionary<Vector3Int, bool> cellsMarkedForLifeChange = new();
     public TileArrayData[] adjacentTiles = new TileArrayData[8];
 
     private void Awake()
@@ -65,7 +60,6 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
-        //SetUpGameBoard();
         GameStart();
     }
     void Update()
@@ -123,8 +117,6 @@ public class GameManager : MonoBehaviour
             ClearAllTiles();
             foreach (var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
             {
-                //Debug.Log(tilePosition.ToString());
-                //allTiles.Add(tilePosition, false);
                 tileMap.SetTile(tilePosition, defaultTile);
                 overlayGridTileMap.SetTile(tilePosition, gridTile);
                 ColorTile(tilePosition, tileMap, offColor);
@@ -136,11 +128,6 @@ public class GameManager : MonoBehaviour
     }
     public void ClearAllTiles()
     {
-        //allTiles.Clear();
-        //livingCells.Clear();
-        //cellsMarkedForLifeChange.Clear();
-        //deadCellConsiderationDict.Clear();
-        //selectedTiles.Clear();
 
         tileMap.ClearAllTiles();
         overlayGridTileMap.ClearAllTiles();
@@ -363,206 +350,9 @@ public class GameManager : MonoBehaviour
         */
         mapComputeShaderManager.GiveSpecificInputCellsToComputeShader(tilePosition, isCellAlive);// !!Testing ONLY
     }
-    /*
-    public Dictionary<Vector3Int, bool> GetAdjacentTiles(Vector3Int targetCell)
-    {
-        Dictionary<Vector3Int, bool> adjacentTiles= new Dictionary<Vector3Int, bool>()
-        {
-            {new Vector3Int(targetCell.x-1, targetCell.y-1, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x-1, targetCell.y-1, tilemapZAxisPosition) )},
-            {new Vector3Int(targetCell.x-1, targetCell.y, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x-1, targetCell.y, tilemapZAxisPosition)) },
-            {new Vector3Int(targetCell.x-1, targetCell.y+1, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x-1, targetCell.y+1, tilemapZAxisPosition)) },
-            {new Vector3Int(targetCell.x, targetCell.y-1, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x, targetCell.y-1, tilemapZAxisPosition)) },
-            {new Vector3Int(targetCell.x, targetCell.y+1, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x, targetCell.y+1, tilemapZAxisPosition)) },
-            {new Vector3Int(targetCell.x+1, targetCell.y-1, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x+1, targetCell.y-1, tilemapZAxisPosition)) },
-            {new Vector3Int(targetCell.x+1, targetCell.y, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x+1, targetCell.y, tilemapZAxisPosition)) },
-            {new Vector3Int(targetCell.x+1, targetCell.y+1, tilemapZAxisPosition), allTiles.GetValueOrDefault(new Vector3Int (targetCell.x+1, targetCell.y+1, tilemapZAxisPosition)) },
-        };
-        return adjacentTiles;
-    }
-    void PopulateAdjacentTilesDict(Vector3Int targetCell)
-    {
-        {
-            adjacentTiles[0].tilePosition.Set(targetCell.x - 1, targetCell.y - 1, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x - 1, targetCell.y - 1, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[0].isActive = isActive;
-        }
-
-        {
-            adjacentTiles[1].tilePosition.Set(targetCell.x - 1, targetCell.y, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x - 1, targetCell.y, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[1].isActive = isActive;
-        }
-
-        {
-            adjacentTiles[2].tilePosition.Set(targetCell.x - 1, targetCell.y + 1, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x - 1, targetCell.y + 1, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[2].isActive = isActive;
-        }
-
-        {
-            adjacentTiles[3].tilePosition.Set(targetCell.x, targetCell.y - 1, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x, targetCell.y - 1, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[3].isActive = isActive;
-        }
-
-        {
-            adjacentTiles[4].tilePosition.Set(targetCell.x, targetCell.y + 1, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x, targetCell.y + 1, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[4].isActive = isActive;
-        }
-
-        {
-            adjacentTiles[5].tilePosition.Set(targetCell.x + 1, targetCell.y - 1, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x + 1, targetCell.y - 1, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[5].isActive = isActive;
-        }
-
-        {
-            adjacentTiles[6].tilePosition.Set(targetCell.x + 1, targetCell.y, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x + 1, targetCell.y, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[6].isActive = isActive;
-            //Debug.Log(adjacentTiles[6].tilePosition.ToString() + isActive6);
-        }
-
-        {
-            adjacentTiles[7].tilePosition.Set(targetCell.x + 1, targetCell.y + 1, tilemapZAxisPosition);
-            allTiles.TryGetValue(new Vector3Int(targetCell.x + 1, targetCell.y + 1, tilemapZAxisPosition), out bool isActive);
-            adjacentTiles[7].isActive = isActive;
-        }
-    }
-    void ClearAdjacentTilesDict()
-    {
-        
-    }
-    
-    void ConsiderLivingCells()
-    {
-        foreach (var livingCell in livingCells)
-        {
-            //Dictionary<Vector3Int, bool> adjacentTiles = GetAdjacentTiles(livingCell.Key);
-            PopulateAdjacentTilesDict(livingCell.Key);
-            int livingAdjacentCells = 0;
-            //Debug.Log("now measuring " + livingCell);
-            foreach (TileArrayData adjacentTile in adjacentTiles)
-            {
-                if (adjacentTile.isActive == true)
-                {
-                    livingAdjacentCells += 1;
-                }
-                else if (adjacentTile.isActive == false && allTiles.ContainsKey(adjacentTile.tilePosition))//this is the second time we lookup if the value exists (first is getvalueordefault) OPTIMIZETHIS
-                {
-                    deadCellConsiderationDict.TryGetValue(adjacentTile.tilePosition, out int deadCellLivingAdjacentCells);
-                    deadCellConsiderationDict[adjacentTile.tilePosition] = deadCellLivingAdjacentCells + 1;
-                    //Debug.Log("dead cell to consider: " + cell.Key);
-                }
-            }
-            if (livingAdjacentCells < 2 || livingAdjacentCells > 3)
-            {
-                MarkCellForLifeChange(livingCell.Key, false);
-                //Debug.Log("Cell marked for death: " +  livingCell.Key + "living adjacent cells: " + livingAdjacentCells);
-            }
-        }
-    }
-
-    
-    void ConsiderLivingCells()
-    {
-        foreach(var livingCell in livingCells)
-        {
-            //Dictionary<Vector3Int, bool> adjacentTiles = GetAdjacentTiles(livingCell.Key);
-            int livingAdjacentCells = 0;
-            //Debug.Log("now measuring " + livingCell);
-            foreach (var cell in adjacentTiles)
-            {
-                if (cell.Value == true)
-                {
-                    livingAdjacentCells += 1;
-                }
-                else if (cell.Value == false && allTiles.ContainsKey(cell.Key))//this is the second time we lookup if the value exists (first is getvalueordefault) OPTIMIZETHIS
-                {
-                    deadCellConsiderationDict.TryGetValue(cell.Key, out int deadCellLivingAdjacentCells);
-                    deadCellConsiderationDict[cell.Key] = deadCellLivingAdjacentCells + 1;
-                    //Debug.Log("dead cell to consider: " + cell.Key);
-                }
-            }
-            if(livingAdjacentCells <2 || livingAdjacentCells > 3)
-            {
-                MarkCellForLifeChange(livingCell.Key, false);
-                //Debug.Log("Cell marked for death: " +  livingCell.Key + "living adjacent cells: " + livingAdjacentCells);
-            }
-        }
-    }
-    */
-
-    /*
-    void ConsiderLivingCells()
-    {
-        foreach (var livingCell in livingCells)
-        {
-            int livingAdjacentCells = 0;
-            Vector3Int keyToConsider = new Vector3Int(0,0,0);
-            //Debug.Log("now measuring " + livingCell);
-            for (int xPosition = livingCell.Key.x-1; xPosition <= livingCell.Key.x+1; xPosition++)//pair of loops iterates through every cell above and below, left and right of the current 'livingKey', and runs the appropriate code based on the cells value
-            {
-                for (int yPosition = livingCell.Key.y - 1; yPosition <= livingCell.Key.y + 1; yPosition++)
-                {
-                    keyToConsider.Set(xPosition,  yPosition, livingCell.Key.z);//
-                    if((keyToConsider.x != livingCell.Key.x || keyToConsider.y != livingCell.Key.y) && allTiles.ContainsKey(keyToConsider))
-                    {
-                        if (allTiles[keyToConsider] == true)
-                        {
-                            livingAdjacentCells += 1;
-                        }
-                        else if (allTiles[keyToConsider] == false)//this is the second time we lookup if the value exists (first is getvalueordefault) OPTIMIZETHIS
-                        {
-                            deadCellConsiderationDict.TryGetValue(keyToConsider, out int deadCellLivingAdjacentCells);
-                            deadCellConsiderationDict[keyToConsider] = deadCellLivingAdjacentCells + 1;
-                            //Debug.Log("dead cell to consider: " + cell.Key);
-                        }
-                    }
-                }
-            }
-            if (livingAdjacentCells < 2 || livingAdjacentCells > 3)
-            {
-                MarkCellForLifeChange(livingCell.Key, false);
-                //Debug.Log("Cell marked for death: " +  livingCell.Key + "living adjacent cells: " + livingAdjacentCells);
-            }
-        }
-    }
-    
-    void ConsiderDeadCells()
-    {
-        foreach (var deadCell in deadCellConsiderationDict)
-        {
-            if (deadCell.Value == 3)
-            {
-                MarkCellForLifeChange(deadCell.Key, true);
-                //Debug.Log("cell marked for birth: " +  deadCell.Key);
-            }
-        }
-        deadCellConsiderationDict.Clear();
-    }
-
-    void MarkCellForLifeChange(Vector3Int targetCell, bool markedToLive)
-    {
-        cellsMarkedForLifeChange.Add(targetCell, markedToLive);
-    }
-
-    void UpdateCellLifeCycle()
-    {
-        foreach(var cell in cellsMarkedForLifeChange)
-        {
-            KillOrBirthCell(cell.Key, cell.Value);
-        }
-        cellsMarkedForLifeChange.Clear();
-    }
-    */
     void RunCellLifeCycleLoop()
     {
         mapComputeShaderManager.TickConwaysGameOfLifeOnComputeShader();
-        //ConsiderLivingCells();
-        //ConsiderDeadCells();
-        //UpdateCellLifeCycle();
     }
     /*
      * Show/Hide overlay grid
