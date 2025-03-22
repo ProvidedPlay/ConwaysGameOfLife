@@ -117,9 +117,9 @@ public class GameManager : MonoBehaviour
             ClearAllTiles();
             foreach (var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
             {
-                tileMap.SetTile(tilePosition, defaultTile);
-                overlayGridTileMap.SetTile(tilePosition, gridTile);
-                ColorTile(tilePosition, tileMap, offColor);
+                //tileMap.SetTile(tilePosition, defaultTile);
+                //overlayGridTileMap.SetTile(tilePosition, gridTile);
+                //ColorTile(tilePosition, tileMap, offColor);
             }
             tilemapZAxisPosition = (int)tileMap.transform.position.z;
 
