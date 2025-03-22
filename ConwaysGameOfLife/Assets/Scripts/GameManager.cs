@@ -557,16 +557,6 @@ public class GameManager : MonoBehaviour
         }
         cellsMarkedForLifeChange.Clear();
     }
-
-    void UpdateBoardStateFromComputeShader()
-    {
-        Cell[] changedCellsSinceLastRoundStarted = mapComputeShaderManager.GetChangedCellsDataFromComputeShader();
-        foreach (var cell in changedCellsSinceLastRoundStarted)
-        {
-            KillOrBirthCell(new Vector3Int(cell.cellPosition.x, cell.cellPosition.y, 0), cell.cellValue == 1 ? true : false);
-        }
-
-    }
     void RunCellLifeCycleLoop()
     {
         mapComputeShaderManager.TickConwaysGameOfLifeOnComputeShader();

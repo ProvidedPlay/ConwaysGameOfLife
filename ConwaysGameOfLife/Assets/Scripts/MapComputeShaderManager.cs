@@ -212,32 +212,6 @@ public class MapComputeShaderManager : MonoBehaviour
 
         mapComputeShader.Dispatch(kernelIndexForWriteCurrentCellsBufferTempToCurrentCellsBuffer, Mathf.CeilToInt(mapWidth / 16.0f), Mathf.CeilToInt(mapHeight / 16.0f), 1);
     }
-    public Cell[] GetChangedCellsDataFromComputeShader()
-    {
-        //Reset the change count buffer to 0
-        outputCellsCountBuffer.SetCounterValue(0);
-
-
-        // Dispatch the compute shader
-        mapComputeShader.Dispatch(kernelIndexForCompareCurrentCellsBufferToCPUSnapshot, Mathf.CeilToInt(mapWidth * mapHeight / 256f), 1, 1);
-
-        // Read back the count of changed cells after dispatch
-        uint[] changedCount = new uint[1];
-        outputCellsCountBuffer.GetData(changedCount);
-        int numberOfChangedCells = (int)changedCount[0];
-
-        // Prepare Cell array changedCellsData to recieve data from the compute shader's changedCellsBuffer after the async operation is complete, this is done by setting its array size to be equal to the changedCellsCount retrieved above
-        outputCellsData = new Cell[numberOfChangedCells];
-        outputCellsBuffer.GetData(outputCellsData);
-        //RequestGOLDataFromComputeShader();            TODO get this code to work asynchronously to avoid delays
-        //ProcessChangedCellsFromComputeShader();
-
-        //clear changedCellsBuffer
-        Cell[] emptyCellBuffer = new Cell[0];
-        outputCellsBuffer.SetData(emptyCellBuffer);
-
-        return outputCellsData;
-    }
     public Cell[] GetAllLivingCellsFromBounds(Vector3Int minBounds, Vector3Int maxBounds)
     {
         //set bounds for computeshader to consider
