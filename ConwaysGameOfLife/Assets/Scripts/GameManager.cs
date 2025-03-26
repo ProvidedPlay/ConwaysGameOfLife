@@ -123,6 +123,13 @@ public class GameManager : MonoBehaviour
                 //ColorTile(tilePosition, tileMap, offColor);
             }
             */
+            if (CheckIfToggleGridOnByDefault())
+            {
+                foreach (var tilePosition in tileMapManager.tileMapBounds.allPositionsWithin)
+                {
+                    overlayGridTileMap.SetTile(tilePosition, gridTile);
+                }
+            }
             tilemapZAxisPosition = (int)tileMap.transform.position.z;
 
             mapComputeShaderManager.GenerateMap(tileMapManager.TileMapWidth, tileMapManager.TileMapHeight);//generate map in compute shader

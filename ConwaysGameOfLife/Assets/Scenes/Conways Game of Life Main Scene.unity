@@ -4692,8 +4692,8 @@ MonoBehaviour:
   deadColor: {r: 0, g: 0, b: 0, a: 1}
   tilemapZAxisPosition: 0
   maxHorizontalCellsBeforeGridDefaultOff: 960
-  maxGameSpeedFactor: 15
-  minimumTickIntervalTime: 1e-10
+  maxGameSpeedFactor: 20
+  minimumTickIntervalTime: 0.000000000000001
   maximumTickIntervalTime: 0.5
   tickIntervalTime: 0.03125
   gameSpeedFactor: 5

@@ -161,10 +161,22 @@ public static class RLEParser
         float widthToHeightRatio = gameManager.tileMapManager.tileMapWidthToHeightRatio;
 
 
-        int tileMapHeight = Convert.ToInt32((Mathf.Max((float)highestYValue, (float)(highestXValue / widthToHeightRatio))) * gameManager.importedRLEPaddingMultiplier);//returns the largest of the two, either the highestYValue, or the highestXValue/width to height ratio (if structure is far wider than it is long)
+
+        int tileMapHeight = Convert.ToInt32(Mathf.Max((float)highestYValue, (float)(highestXValue / widthToHeightRatio)));//returns the largest of the two, either the highestYValue, or the highestXValue/width to height ratio (if structure is far wider than it is long)
+        int tileMapHeightWithPadding = Convert.ToInt32(tileMapHeight* gameManager.importedRLEPaddingMultiplier);//returns the largest of the two, either the highestYValue, or the highestXValue/width to height ratio (if structure is far wider than it is long)
+
+        //create padding values
+        int paddingAmountY = tileMapHeightWithPadding - tileMapHeight;
+        int paddingAmountX = Convert.ToInt32(paddingAmountY * widthToHeightRatio);
+
+        //apply padding
+        List <Vector3Int> paddedLivingCellPositions = new List<Vector3Int>();
+        foreach(Vector3Int position in livingCellPositions)
+        {
+            paddedLivingCellPositions.Add(new Vector3Int(position.x + (paddingAmountX/2), position.y + (paddingAmountY/2), 0));
+        }
         
-        
-        LevelData levelData = new LevelData(tileMapHeight, livingCellPositions);
+        LevelData levelData = new LevelData(tileMapHeightWithPadding, paddedLivingCellPositions);
 
         return levelData;
     }
