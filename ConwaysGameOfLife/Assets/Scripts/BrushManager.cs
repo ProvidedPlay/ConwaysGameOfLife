@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 using UnityEngine.Tilemaps;
 
 public class BrushManager : MonoBehaviour
@@ -30,6 +31,12 @@ public class BrushManager : MonoBehaviour
     public BrushData activeBrushData;
     public BrushData[] allBrushDataObjects;
     public List <BrushData> customBrushDataObjects;
+
+#if UNITY_EDITOR
+    [Header("Editor only JSON Brush import")]
+    [Tooltip("Drop JSON TextAssets here, then use the context menu 'Bake into Preset'")]
+    public TextAsset[] jsonBrushesToImport;
+#endif
 
     void Awake()
     {
@@ -289,4 +296,56 @@ public class BrushManager : MonoBehaviour
             gameManager.brushManager.ImportBrush(newBrushData, loadCustomBrushes);
         }
     }
+    /*
+     * EDITOR ONLY BRUSH PRESET IMPORTER
+     */
+#if UNITY_EDITOR
+    [ContextMenu("Bake JSON Brushes Into Presets")]
+    private void BakeJsonBrushesIntoPresets()
+    {
+        if(jsonBrushesToImport == null || jsonBrushesToImport.Length == 0)
+        {
+            Debug.LogWarning("No JSON brushes assigned to 'jsonBrushesToImport");
+            return;
+        }
+
+        Undo.RecordObject(this, "Bake JSON Brushes Into Presets");
+
+        //Start from existing preset brushes
+        List<BrushData> newBrushList = new List<BrushData>();
+        if(allBrushDataObjects != null && allBrushDataObjects.Length != 0)
+        {
+            newBrushList.AddRange(allBrushDataObjects);
+        }
+
+        foreach(var jsonBrush in jsonBrushesToImport)
+        {
+            try
+            {
+                BrushData newBrush = JsonUtility.FromJson<BrushData>(jsonBrush.text);
+                if (newBrush != null)
+                {
+                    newBrushList.Add(newBrush);
+                    Debug.Log($"Successfully imported new brush '{newBrush.brushName}' from json '{jsonBrush.name}'");
+                }
+                else
+                {
+                    Debug.LogError($"Failed to import from json '{jsonBrush.name}'");
+                }
+            }
+            catch(System.Exception exception)
+            {
+                Debug.LogError($"Error parsing JSON from Text Asset '{jsonBrush.name}' : '{exception.Message}'.");
+            }
+        }
+
+        allBrushDataObjects = newBrushList.ToArray();
+
+        //Clear the import list so we dont accidentally re-import
+        jsonBrushesToImport = System.Array.Empty<TextAsset>();
+
+        EditorUtility.SetDirty(this);//tells unity that something has changed and needs to be saved
+    }
+
+#endif
 }
