@@ -24,6 +24,7 @@ public class GameManager : MonoBehaviour
     public BrushManager brushManager;
     public UIManager uiManager;
     public MapComputeShaderManager mapComputeShaderManager;
+    public GameConfigManager gameConfigManager;
 
     public bool proceedToNextGameState;
     public string proceedToNextGameStateShortcut;
@@ -94,6 +95,7 @@ public class GameManager : MonoBehaviour
         brushManager = GetComponent<BrushManager>();
         gameCamera = Camera.main;
         mapComputeShaderManager = GetComponent<MapComputeShaderManager>();
+        gameConfigManager = GetComponent<GameConfigManager>();
     }
 
 
@@ -180,6 +182,7 @@ public class GameManager : MonoBehaviour
         StopAllCoroutines();
         SetUpGameBoard();
         brushManager.InitializeBrushManager();
+        gameConfigManager.LoadPresetLevelsIfNeeded();
         StartCoroutine(GameLoop());
     }
     public void GameRestart()

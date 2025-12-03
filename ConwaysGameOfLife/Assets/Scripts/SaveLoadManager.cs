@@ -1,3 +1,4 @@
+using DG.Tweening.Core.Easing;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -9,6 +10,100 @@ public static class SaveLoadManager
     public static string rleFilesFolderDirectory = "/RLEData";
     public static string customBrushesFolderDirectory = "/Brushes/CustomBrushes";
     public static string presetBrushesFolderDirectory = "/Brushes/PresetBrushes";
+    public static string gameConfigDirectory = "/Config";
+
+    public static void GenerateConfigFile(GameManager gameManager)
+    {
+        //create game config directory if it doesn't exist
+        string configFolderPath = Application.persistentDataPath + gameConfigDirectory;
+        if (!Directory.Exists(configFolderPath))
+        {
+            Directory.CreateDirectory(configFolderPath);
+        }
+        //create the config file path via the name specified in gameManager's gameConfigManager; if theres nothing set, then no file will be made
+        if (string.IsNullOrWhiteSpace(gameManager.gameConfigManager.configFileName))
+        {
+            Debug.Log("No config name specified in game manager at "+ configFolderPath);
+            return;
+        }
+        string configFilePath = gameManager.gameConfigManager.configFileName + ".json";
+
+        // check if there is already a config file present at file path. If one exists, stop. Otherwise, create one with default values
+        string fullConfigFilePath = Path.Combine(configFolderPath,configFilePath);
+        if (File.Exists(fullConfigFilePath))
+        {
+            Debug.Log("Config file already exists at stated filepath "+ fullConfigFilePath);
+            gameManager.gameConfigManager.configFilePath = fullConfigFilePath;
+            return;
+        }
+
+        //create an object of type GameConfigData (with default values), turn it into a JSON string
+        GameConfigData gameConfigData = new GameConfigData();
+        string gameConfigDataJSON = JsonUtility.ToJson(gameConfigData);
+
+        //create a config file at specified path with specified config file name
+        File.WriteAllText(fullConfigFilePath, gameConfigDataJSON);
+
+        //save game file path to GameConfigManager
+        gameManager.gameConfigManager.configFilePath = fullConfigFilePath;
+    }
+    public static GameConfigData LoadGameConfigData(string configFilePath, GameManager gameManager)
+    {
+        //Check if theres a game config file in the given path. If not, add one
+        if (!File.Exists(configFilePath))
+        {
+            GenerateConfigFile(gameManager);
+            configFilePath = gameManager.gameConfigManager.configFilePath;
+        }
+
+        //load data from JSON file into a string, then turn that string into a new GameConfigData file
+        string gameConfigJSON = File.ReadAllText(configFilePath);
+        GameConfigData gameConfigData = JsonUtility.FromJson<GameConfigData>(gameConfigJSON);
+
+        //check if the json file exists: if so, return it; if not, return a new config file instead
+        if(gameConfigData == null)
+        {
+            return new GameConfigData();
+        }
+        return gameConfigData;
+    }
+    public static void UpdateGameConfigData(string configFilePath, GameManager gameManager, GameConfigData newGameConfigData)
+    {
+        //Check if theres a game config file in the given path. If not, add one
+        if (!File.Exists(configFilePath))
+        {
+            GenerateConfigFile(gameManager);
+            configFilePath = gameManager.gameConfigManager.configFilePath;
+        }
+
+        string newGameConfigDataJSON = JsonUtility.ToJson(newGameConfigData);
+
+        //create a config file at specified path with specified config file name
+        File.WriteAllText(configFilePath, newGameConfigDataJSON);
+    }
+    public static void UnpackPresetLevelsIntoSaveFolder(GameManager gameManager)
+    {
+        //Grab the paths for both the Pre loaded Levels folder, and the save file folder
+        string preLoadedLevelsFolderPath = Path.Combine(Application.streamingAssetsPath, gameManager.gameConfigManager.preLoadedLevelsFolderName);
+        string saveFolderPath = Application.persistentDataPath + SaveLoadManager.saveFolderDirectory;
+
+        //If the save directory doesnt exist yet, create one
+        if (!Directory.Exists(saveFolderPath))
+        {
+            Directory.CreateDirectory(saveFolderPath);
+        }
+
+        
+        foreach(string preLoadedLevelOriginPath in Directory.GetFiles(preLoadedLevelsFolderPath))
+        {
+            //for each file path in the pre loaded level directory, get the name of the file, and append it to the save folder to make a new file path
+            string preLoadedLevelName = Path.GetFileName(preLoadedLevelOriginPath);
+            string newSaveFilePath = Path.Combine(saveFolderPath, preLoadedLevelName);
+
+            //copy the source file into the destination file path. Overwrite anything already there
+            File.Copy(preLoadedLevelOriginPath, newSaveFilePath, overwrite: true);
+        }
+    }
     public static void SaveLevelWithName(GameManager gameManager)
     {
         //create save data directory if it doesnt exist
